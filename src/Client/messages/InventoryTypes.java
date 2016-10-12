@@ -1,4 +1,4 @@
-package messages;
+package Client.messages;
 
 /**
  * Created by Matteo on 07/10/2016.

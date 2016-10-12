@@ -1,21 +1,21 @@
-import bitio.LittleEndianOutputStream;
-import messages.PeerAddress;
-import messages.Version;
+package Client;
+
+import Client.bitio.LittleEndianOutputStream;
+import Client.messages.PeerAddress;
+import Client.messages.Version;
+import Client.network.SocketListener;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FilterOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Random;
-import java.util.Scanner;
-import java.util.StringJoiner;
 
 /**
  * Created by Matteo on 07/10/2016.
  */
 public class Main {
+
+
+    public static SocketListener listener = new SocketListener();
 
     public static void main(String [] args) throws IOException {
         Version v = new Version();

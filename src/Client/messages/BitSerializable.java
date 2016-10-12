@@ -1,7 +1,7 @@
-package messages;
+package Client.messages;
 
-import bitio.LittleEndianInputStream;
-import bitio.LittleEndianOutputStream;
+import Client.bitio.LittleEndianInputStream;
+import Client.bitio.LittleEndianOutputStream;
 
 import java.io.IOException;
 

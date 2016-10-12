@@ -1,7 +1,7 @@
-package messages;
+package Client.messages;
 
-import bitio.LittleEndianInputStream;
-import bitio.LittleEndianOutputStream;
+import Client.bitio.LittleEndianInputStream;
+import Client.bitio.LittleEndianOutputStream;
 import io.nayuki.bitcoin.crypto.Sha256;
 import io.nayuki.bitcoin.crypto.Sha256Hash;
 

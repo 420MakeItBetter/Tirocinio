@@ -1,19 +1,19 @@
-package messages;
+package Client.messages;
 
-import bitio.LittleEndianInputStream;
-import bitio.LittleEndianOutputStream;
+import Client.bitio.LittleEndianInputStream;
+import Client.bitio.LittleEndianOutputStream;
 
 import java.io.IOException;
 
 /**
- * Created by Matteo on 07/10/2016.
+ * Created by Matteo on 08/10/2016.
  */
-public class VerAck extends Message{
+public class FilterClear extends Message {
 
 
     @Override
     public String getCommand() {
-        return "verack";
+        return "filterclear";
     }
 
     @Override

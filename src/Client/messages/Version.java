@@ -1,10 +1,9 @@
-package messages;
+package Client.messages;
 
-import bitio.LittleEndianInputStream;
-import bitio.LittleEndianOutputStream;
+import Client.bitio.LittleEndianInputStream;
+import Client.bitio.LittleEndianOutputStream;
 
 import java.io.IOException;
-import java.net.InetAddress;
 
 /**
  * Created by Matteo on 07/10/2016.
@@ -22,6 +21,10 @@ public class Version extends Message{
     private int height;
     private boolean relay;
 
+
+    public Version(){
+        setLength(4 + 8 + 8 + 26 + 26 + 8 + 1 + 4 + 1);
+    }
 
     @Override
     public String getCommand() {

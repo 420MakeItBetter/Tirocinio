@@ -1,4 +1,4 @@
-package bitio; /**
+package Client.bitio; /**
  * Copyright 2011 Christian Decker
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,7 @@ import java.nio.ByteBuffer;
  * The standard java.io.DataOutputStream class which this class
  * imitates uses big-endian integers.
  *
- * @see     net.bitdroid.network.wire.LittleEndianInputStream
+ * @see     LittleEndianInputStream
  * @see     java.io.DataOutputStream
  */
 public class LittleEndianOutputStream extends FilterOutputStream {
@@ -216,7 +216,7 @@ public class LittleEndianOutputStream extends FilterOutputStream {
 		this.writeLong(Double.doubleToLongBits(d));
 
 	}
-
+/*
 	/**
 	 * Writes a string of no more than 65,535 characters
 	 * to the underlying output stream using UTF-8
