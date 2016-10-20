@@ -30,4 +30,8 @@ public abstract class Message implements BitSerializable{
         return checksum;
     }
 
+    @Override
+    public String toString() {
+        return "Message: "+getCommand()+"\nLength: "+getLength()+"\nChecksum: "+getChecksum();
+    }
 }

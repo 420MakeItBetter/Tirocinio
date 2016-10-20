@@ -23,7 +23,7 @@ public class Version extends Message{
 
 
     public Version(){
-        setLength(4 + 8 + 8 + 26 + 26 + 8 + 1 + 4 + 1);
+        setLength(4 + 8 + 8 + 26 + 26 + 8 + 18 + 4 + 1);
     }
 
     @Override
@@ -53,6 +53,10 @@ public class Version extends Message{
 
     public void setNonce(long nonce) {
         this.nonce = nonce;
+    }
+
+    public long getNonce() {
+        return nonce;
     }
 
     public void setUserAgent(String userAgent) {
@@ -93,5 +97,10 @@ public class Version extends Message{
         leos.writeString(userAgent);
         leos.writeInt(height);
         leos.writeBoolean(relay);
+    }
+
+    @Override
+    public String toString() {
+        return super.toString()+"[protocol: "+version+" service: "+services+" timestamp: "+ timestamp+ myAddress.toString()+ yourAddress.toString() + " nonce: "+nonce+" userAgent: "+userAgent + "height: "+height+" relay: "+relay+"]";
     }
 }

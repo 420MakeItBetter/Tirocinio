@@ -283,8 +283,13 @@ public class LittleEndianOutputStream extends FilterOutputStream {
 	}
 
 	public void writeString(String s) throws IOException {
-		writeVariableSize(s.length());
-		out.write(s.getBytes());
+		if(s != null)
+		{
+			writeVariableSize(s.length());
+			out.write(s.getBytes());
+		}
+		else
+			writeVariableSize(0);
 	}
 
 	public static LittleEndianOutputStream wrap(final byte[] b){

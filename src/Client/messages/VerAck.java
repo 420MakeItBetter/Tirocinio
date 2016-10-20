@@ -11,6 +11,10 @@ import java.io.IOException;
 public class VerAck extends Message{
 
 
+    public VerAck(){
+        setLength(0);
+    }
+
     @Override
     public String getCommand() {
         return "verack";
@@ -24,5 +28,10 @@ public class VerAck extends Message{
     @Override
     public void write(LittleEndianOutputStream leos) throws IOException {
 
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
     }
 }

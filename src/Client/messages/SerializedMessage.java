@@ -7,15 +7,12 @@ import java.nio.ByteBuffer;
  */
 public class SerializedMessage {
 
-    private ByteBuffer buffer;
+    private ByteBuffer header;
+    private ByteBuffer payload;
     private String command;
     private int checksum;
     private int size;
 
-
-    public void setBuffer(ByteBuffer buffer) {
-        this.buffer = buffer;
-    }
 
     public void setCommand(String command) {
         this.command = command;
@@ -25,8 +22,21 @@ public class SerializedMessage {
         this.size = size;
     }
 
-    public ByteBuffer getBuffer() {
-        return buffer;
+
+    public void setHeader(ByteBuffer header) {
+        this.header = header;
+    }
+
+    public ByteBuffer getHeader() {
+        return header;
+    }
+
+    public void setPayload(ByteBuffer payload) {
+        this.payload = payload;
+    }
+
+    public ByteBuffer getPayload() {
+        return payload;
     }
 
     public String getCommand() {
@@ -43,5 +53,10 @@ public class SerializedMessage {
 
     public int getChecksum() {
         return checksum;
+    }
+
+    @Override
+    public String toString() {
+        return "command: "+command+" size "+size+" checksum "+checksum;
     }
 }

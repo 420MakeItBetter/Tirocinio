@@ -1,127 +1,62 @@
 package Client.network;
 
-import Client.bitio.LittleEndianInputStream;
+import Client.Protocol.Connect;
+import Client.Protocol.KeepAlive;
 import Client.messages.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SocketChannel;
 
 /**
  * Created by Matteo on 12/10/2016.
  */
 public class ComputeTask implements Runnable {
 
-    private SelectionKey key;
-    private Selector selector;
+    private SocketChannel skt;
+    private Peer p;
+    private Message m;
+    private Logger logger = LoggerFactory.getLogger(ReadTask.class);
 
-    public ComputeTask(SelectionKey key, Selector selector){
-        this.key = key;
-        this.selector = selector;
+    public ComputeTask(SocketChannel skt, Peer p,Message m){
+        this.skt = skt;
+        this.p = p;
+        this.m = m;
     }
 
     @Override
     public void run() {
 
-        Peer peer = (Peer) key.attachment();
-        Message m = createMessage(peer.getMsg());
-
-
-    }
-
-    private Message createMessage(SerializedMessage msg){
-
-        Message message = null;
-        switch (msg.getCommand().toLowerCase())
-        {
-            case "addr" :
-                message = new Address();
-                break;
-            case "alert" :
-                message = new Alert();
-                break;
-            case "block" :
-                message = new Block();
-                break;
-            case "feefilter" :
-                message = new FeeFilter();
-                break;
-            case "filteradd" :
-                message = new FilterAdd();
-                break;
-            case "filterclear" :
-                message = new FilterClear();
-                break;
-            case "filterload" :
-                message = new FilterLoad();
-                break;
-            case "getaddr" :
-                message = new GetAddress();
-                break;
-            case "getblocks" :
-                message = new GetBlocks();
-                break;
-            case "getdata" :
-                message = new GetData();
-                break;
-            case "getheaders" :
-                message = new GetHeaders();
-                break;
-            case "headers" :
-                message = new Header();
-                break;
-            case "inv" :
-                message = new Inventory();
-                break;
-            case "mempool" :
-                message = new MemoryPool();
-                break;
-            case "merkleblock" :
-                message = new MerkleBlock();
-                break;
-            case "notfound" :
-                message = new NotFound();
-                break;
-            case "ping" :
-                message = new Ping();
-                break;
-            case "pong" :
-                message = new Pong();
-                break;
-            case "reject" :
-                message = new Reject();
-                break;
-            case "sendcmpct" :
-                message = new SendCMPCT();
-                break;
-            case "sendheaders" :
-                message = new SendHeaders();
-                break;
-            case "tx" :
-                message = new Transaction();
-                break;
-            case "verack" :
-                message = new VerAck();
-                break;
-            case "version" :
-                message = new Version();
-                break;
-        }
-
-        message.setLength(msg.getSize());
-        message.setChecksum(msg.getChecksum());
         try
         {
-            message.read(LittleEndianInputStream.wrap(msg.getBuffer()));
-            return message;
+            logger.info("Messaggio ricevuto {} da {}",m.getCommand(),p.getAddress());
+            if(m instanceof VerAck)
+                ;
+            else if(m instanceof Version)
+                versionResponse((Version) m);
+            else if(m instanceof Ping)
+                pingResponse((Ping) m);
         } catch (IOException e)
         {
             e.printStackTrace();
         }
-
-        return null;
-
     }
+
+    private void pingResponse(Ping m) throws IOException {
+        KeepAlive.sendPong(m,skt,p);
+    }
+
+    private void versionResponse(Version m) throws ClosedChannelException {
+        VerAck ack = new VerAck();
+        p.setPeerState(PeerState.OPEN);
+        Connect.sendVerAck(ack,skt,p);
+    }
+
+
+
+
 
 
 }

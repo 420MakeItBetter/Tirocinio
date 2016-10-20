@@ -12,6 +12,10 @@ public class Pong extends Message {
 
     private long nonce;
 
+    public Pong(){
+        setLength(8);
+    }
+
     public void setNonce(long nonce) {
         this.nonce = nonce;
     }

@@ -12,6 +12,10 @@ public class Ping extends Message {
 
     private long nonce;
 
+    public Ping(){
+        setLength(8);
+    }
+
     public void setNonce(long nonce) {
         this.nonce = nonce;
     }
@@ -30,5 +34,9 @@ public class Ping extends Message {
     @Override
     public void write(LittleEndianOutputStream leos) throws IOException {
         leos.writeLong(nonce);
+    }
+
+    public long getNonce() {
+        return nonce;
     }
 }

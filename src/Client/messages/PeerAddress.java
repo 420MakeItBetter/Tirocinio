@@ -52,7 +52,7 @@ public class PeerAddress implements BitSerializable {
         setAddress(InetAddress.getByAddress(addr));
         byte [] p = new byte[2];
         leis.read(p);
-        setPort(( p[0] << 8) & 0xFF | (p[1] & 0xFF));
+        setPort(( p[0]& 0xFF) << 8 | (p[1] & 0xFF));
 
     }
 
@@ -65,5 +65,18 @@ public class PeerAddress implements BitSerializable {
                     (byte)0x00,(byte)0xFF,(byte)0xFF});
         leos.write(peerAddress.getAddress());
         leos.write(new byte[]{(byte)(port >> 8 & 0xFF), (byte)(port & 0xFF)});
+    }
+
+    @Override
+    public String toString() {
+        return " ip: "+ peerAddress.toString()+" port: "+port + " service: "+service;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public InetAddress getAddress() {
+        return peerAddress;
     }
 }

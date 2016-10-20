@@ -1,12 +1,12 @@
 package Client.network;
 
 import Client.Main;
-import Client.messages.SerializedMessage;
+import Client.bitio.LittleEndianInputStream;
+import Client.messages.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
 /**
@@ -14,67 +14,126 @@ import java.nio.channels.SocketChannel;
  */
 public class ReadTask implements Runnable{
 
-    private SelectionKey key;
-    private Selector selector;
+    private SocketChannel skt;
+    private Peer p;
+    private SerializedMessage msg;
 
-    public ReadTask(SelectionKey key,Selector selector) {
-        this.key = key;
-        this.selector = selector;
+    public ReadTask(SocketChannel skt,Peer p,SerializedMessage msg) {
+        this.skt = skt;
+        this.p = p;
+        this.msg = msg;
     }
 
     @Override
     public void run() {
-        SocketChannel skt = (SocketChannel) key.channel();
-        Peer peer = (Peer) key.attachment();
-        SerializedMessage msg = null;
-        if(peer.getMsg() == null)
+        byte [] command = new byte [12];
+        msg.getHeader().rewind();
+        if(msg.getPayload() != null)
+            msg.getPayload().rewind();
+        msg.getHeader().position(4);
+        msg.getHeader().get(command);
+        msg.setCommand(new String(command).trim());
+        msg.getHeader().position(20);
+        msg.setChecksum(msg.getHeader().getInt());
+
+        Message m = createMessage(msg);
+        ComputeTask task = new ComputeTask(skt,p,m);
+        Main.listener.ex.execute(task);
+    }
+
+
+    private Message createMessage(SerializedMessage msg){
+
+        Message message = null;
+        switch (msg.getCommand().toLowerCase())
         {
-            msg = new SerializedMessage();
-            ByteBuffer magic = ByteBuffer.allocate(4);
-            ByteBuffer command = ByteBuffer.allocate(12);
-            ByteBuffer length = ByteBuffer.allocate(4);
-            ByteBuffer checksum = ByteBuffer.allocate(4);
-            try
-            {
-                skt.read(new ByteBuffer[] {magic,command,length,checksum});
-                msg.setCommand(new String(command.array()).trim());
-                byte [] b = length.array();
-                int size = ((b[3] & 0xFF) << 24 | (b[2] & 0xFF) << 16 | (b[1] & 0xFF) << 8 | (b[0] & 0xFF));
-                b = checksum.array();
-                int check = ((b[3] & 0xFF) << 24 | (b[2] & 0xFF) << 16 | (b[1] & 0xFF) << 8 | (b[0] & 0xFF));
-                msg.setChecksum(check);
-                ByteBuffer buffer = ByteBuffer.allocate(size);
-                msg.setSize(size);
-                msg.setBuffer(buffer);
-            } catch (IOException e)
-            {
-                e.printStackTrace();
-            }
+            case "addr" :
+                message = new Address();
+                break;
+            case "alert" :
+                message = new Alert();
+                break;
+            case "block" :
+                message = new Block();
+                break;
+            case "feefilter" :
+                message = new FeeFilter();
+                break;
+            case "filteradd" :
+                message = new FilterAdd();
+                break;
+            case "filterclear" :
+                message = new FilterClear();
+                break;
+            case "filterload" :
+                message = new FilterLoad();
+                break;
+            case "getaddr" :
+                message = new GetAddress();
+                break;
+            case "getblocks" :
+                message = new GetBlocks();
+                break;
+            case "getdata" :
+                message = new GetData();
+                break;
+            case "getheaders" :
+                message = new GetHeaders();
+                break;
+            case "headers" :
+                message = new Header();
+                break;
+            case "inv" :
+                message = new Inventory();
+                break;
+            case "mempool" :
+                message = new MemoryPool();
+                break;
+            case "merkleblock" :
+                message = new MerkleBlock();
+                break;
+            case "notfound" :
+                message = new NotFound();
+                break;
+            case "ping" :
+                message = new Ping();
+                break;
+            case "pong" :
+                message = new Pong();
+                break;
+            case "reject" :
+                message = new Reject();
+                break;
+            case "sendcmpct" :
+                message = new SendCMPCT();
+                break;
+            case "sendheaders" :
+                message = new SendHeaders();
+                break;
+            case "tx" :
+                message = new Transaction();
+                break;
+            case "verack" :
+                message = new VerAck();
+                break;
+            case "version" :
+                message = new Version();
+                break;
         }
-        else
-        {
-            msg = peer.getMsg();
-            peer.setMsg(null);
-        }
+
+        message.setLength(msg.getSize());
+        message.setChecksum(msg.getChecksum());
         try
         {
-            skt.read(msg.getBuffer());
-            if(msg.getBuffer().position() < msg.getBuffer().capacity())
-            {
-                peer.setMsg(msg);
-                skt.register(selector,SelectionKey.OP_READ,peer);
-            }
-            else
-            {
-                msg.getBuffer().rewind();
-                peer.setMsg(msg);
-                ComputeTask task = new ComputeTask(key,selector);
-                Main.listener.ex.execute(task);
-            }
+            message.read(LittleEndianInputStream.wrap(msg.getPayload()));
+            return message;
         } catch (IOException e)
         {
             e.printStackTrace();
         }
 
+        return null;
+
     }
+
 }

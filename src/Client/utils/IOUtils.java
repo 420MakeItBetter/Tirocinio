@@ -31,4 +31,13 @@ public class IOUtils {
         m.write(leos);
     }
 
+
+    public static byte [] getChecksum(byte [] hash){
+        return new byte [] {hash[0], hash[1], hash[2], hash[3]};
+    }
+
+    public static byte [] intToByteArray(int i){
+        return new byte [] {(byte) (i & 0xFF), (byte) ((i >>> 8) & 0xFF), (byte) ((i >>> 16) & 0xFF), (byte) ((i >>> 24) & 0xFF)};
+    }
+
 }
