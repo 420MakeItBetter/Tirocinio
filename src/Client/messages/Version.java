@@ -47,6 +47,14 @@ public class Version extends Message{
         myAddress = addr;
     }
 
+    public PeerAddress getMyAddress() {
+        return myAddress;
+    }
+
+    public PeerAddress getYourAddress() {
+        return yourAddress;
+    }
+
     public void setYourAddress(PeerAddress addr){
         yourAddress = addr;
     }
@@ -102,5 +110,9 @@ public class Version extends Message{
     @Override
     public String toString() {
         return super.toString()+"[protocol: "+version+" service: "+services+" timestamp: "+ timestamp+ myAddress.toString()+ yourAddress.toString() + " nonce: "+nonce+" userAgent: "+userAgent + "height: "+height+" relay: "+relay+"]";
+    }
+
+    public long getService() {
+        return services;
     }
 }

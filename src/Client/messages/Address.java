@@ -21,6 +21,19 @@ public class Address extends Message {
      */
     private static final int MAX_ENTRIES = 1000;
 
+
+    @Override
+    public int getLength() {
+        int varint = 1;
+        if(addresses.size() < 0xFD)
+            varint = 1;
+        else if(addresses.size() <= 0xFFFF)
+            varint = 3;
+        else if(addresses.size() <= 0xFFFFFFFF)
+            varint = 5;
+        return 30*addresses.size() + varint;
+    }
+
     /**
      * The list of {@link PeerAddress} of this message
      */

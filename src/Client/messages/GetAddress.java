@@ -11,6 +11,10 @@ import java.io.IOException;
 public class GetAddress extends Message {
 
 
+    public GetAddress(){
+        setLength(0);
+    }
+
     @Override
     public String getCommand() {
         return "getaddr";

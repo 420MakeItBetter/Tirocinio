@@ -2,6 +2,7 @@ package Client.network;
 
 
 import Client.BitConstants;
+import Client.Main;
 import Client.messages.SerializedMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +57,7 @@ public class SocketListener implements Runnable {
     @Override
     public void run() {
 
-        System.out.println("Servizio partito");
-        while (true)
+        while (!Thread.currentThread().isInterrupted())
         {
             try
             {
@@ -88,7 +88,6 @@ public class SocketListener implements Runnable {
             {
                 e.printStackTrace();
             }
-            logger.info("Sono aperte {} connessioni",selector.keys().size() - closed);
         }
 
 
@@ -102,7 +101,10 @@ public class SocketListener implements Runnable {
         {
             if(msg.getPayload() != null)
             {
-                logger.info("Scritto messaggio {} inviati {} byte", msg.getCommand(), skt.write(new ByteBuffer[]{msg.getHeader(), msg.getPayload()}));
+                if(Main.showLog)
+                    logger.info("Scritto messaggio {} inviati {} byte", msg.getCommand(), skt.write(new ByteBuffer[]{msg.getHeader(), msg.getPayload()}));
+                else
+                    skt.write(new ByteBuffer[]{msg.getHeader(), msg.getPayload()});
                 if (msg.getPayload().position() == msg.getPayload().capacity())
                     p.poolMsg();
                 if (p.hasNoPendingMessage())
@@ -110,7 +112,10 @@ public class SocketListener implements Runnable {
             }
             else
             {
-                logger.info("Scritto messaggio {} inviati {} byte",msg.getCommand(), skt.write(msg.getHeader()));
+                if(Main.showLog)
+                    logger.info("Scritto messaggio {} inviati {} byte",msg.getCommand(), skt.write(msg.getHeader()));
+                else
+                    skt.write(msg.getHeader());
                 if (msg.getHeader().position() == msg.getHeader().capacity())
                     p.poolMsg();
                 if (p.hasNoPendingMessage())
@@ -136,8 +141,10 @@ public class SocketListener implements Runnable {
                 long read = skt.read(header);
                 if(read == -1)
                 {
-                    logger.error("il Peer {} ha chiuso la connessione", skt.getRemoteAddress());
+                    if(Main.showLog)
+                        logger.error("il Peer {} ha chiuso la connessione", skt.getRemoteAddress());
                     skt.close();
+                    p.setPeerState(PeerState.CLOSE);
                     closed++;
                     return;
                 }

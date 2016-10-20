@@ -8,21 +8,44 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Matteo on 08/10/2016.
+ * This is the Implementation of the "block" {@link Message}
+ *
+ * @author Matteo Franceschi
+ * @see Client.messages.Message
  */
 public class Block extends Header {
 
-    List<Transaction> transactions;
+    /**
+     * the parameter which keeps all the {@link Transaction} of this Message
+     */
+    private List<Transaction> transactions;
 
+    /**
+     * initialize this Message
+     */
     public Block(){
         transactions = new ArrayList<>();
     }
 
 
+    /**
+     * return the list of {@link Transaction}, the list returned is modificable, all the changes done to the list
+     * are also done to the list of transaction of this {@link Message}
+     * @return the list of {@link Transaction}
+     */
+    public List<Transaction> getTransactions() {
+        return transactions;
+    }
+
+    /**
+     * returns the command for this message
+     * @return "block"
+     */
     @Override
     public String getCommand() {
         return "block";
     }
+
 
     @Override
     public void read(LittleEndianInputStream leis) throws IOException {

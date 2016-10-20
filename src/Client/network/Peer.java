@@ -18,6 +18,8 @@ public class Peer{
 
     private InetAddress addr;
     private int port;
+    private int timestamp;
+    private long service;
     private Queue<SerializedMessage> pendingMessages;
     private SerializedMessage incompleteMsg;
     private PeerState state;
@@ -26,7 +28,7 @@ public class Peer{
         pendingMessages = new LinkedList<>();
         this.addr = addr;
         this.port = port;
-        state = PeerState.HANDSAKE;
+        state = PeerState.CLOSE;
         incompleteMsg = null;
     }
 
@@ -72,4 +74,30 @@ public class Peer{
     public boolean hasNoPendingMessage() {
         return pendingMessages.isEmpty();
     }
+
+    public void setTimestamp(int timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public int getTimestamp() {
+        return timestamp;
+    }
+
+
+    public void setService(long service) {
+        this.service = service;
+    }
+
+    public long getService() {
+        return service;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public PeerState getPeerState() {
+        return state;
+    }
 }
+

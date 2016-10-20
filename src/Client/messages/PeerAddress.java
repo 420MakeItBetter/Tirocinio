@@ -23,6 +23,10 @@ public class PeerAddress implements BitSerializable {
         service = s;
     }
 
+    public long getService() {
+        return service;
+    }
+
     public void setAddress(InetAddress addr){
         peerAddress = addr;
     }

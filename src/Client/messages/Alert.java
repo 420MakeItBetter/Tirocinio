@@ -178,15 +178,28 @@ public class Alert extends Message {
     }
 
 
+    /**
+     * the setter for the signature parameter
+     * @param signature the parameter
+     */
     public void setSignature(byte[] signature) {
         this.signature = signature;
     }
 
+    /**
+     * The command for this messagge
+     * @return "alert"
+     */
     @Override
     public String getCommand() {
         return "alert";
     }
 
+    /**
+     * Initialize this message reading from a {@link LittleEndianInputStream}
+     * @param leis the InputStream
+     * @throws IOException in case something went wrong
+     */
     @Override
     public void read(LittleEndianInputStream leis) throws IOException {
         version = leis.readInt();
@@ -210,6 +223,11 @@ public class Alert extends Message {
         reserved = leis.readString();
     }
 
+    /**
+     * Serialize accordingly to the Bitcoin protocol this message to the {@link LittleEndianOutputStream} passed as argument
+     * @param leos the OutputStream
+     * @throws IOException in case something went wrong
+     */
     @Override
     public void write(LittleEndianOutputStream leos) throws IOException {
         leos.writeInt(version);
