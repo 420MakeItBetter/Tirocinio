@@ -25,8 +25,8 @@ public class SocketListener implements Runnable {
     Selector selector;
     ConcurrentLinkedQueue<SelectorParam> queue;
     Executor ex;
+    ConcurrentLinkedQueue<Runnable> tasks;
     Logger logger;
-    private int closed;
 
 
     public SocketListener(){
@@ -40,7 +40,7 @@ public class SocketListener implements Runnable {
             skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
             skt.register(selector,SelectionKey.OP_ACCEPT);
             ex = Executors.newCachedThreadPool();
-            closed = 0;
+            tasks = new ConcurrentLinkedQueue<>();
         } catch (IOException e)
         {
             e.printStackTrace();
@@ -82,6 +82,12 @@ public class SocketListener implements Runnable {
                 {
                     SelectorParam param = queue.poll();
                     param.register(selector);
+                }
+                int count = 0;
+                while(!tasks.isEmpty() && count < 5)
+                {
+                    Runnable r = tasks.poll();
+                    ex.execute(r);
                 }
 
             } catch (IOException e)
@@ -145,7 +151,6 @@ public class SocketListener implements Runnable {
                         logger.error("il Peer {} ha chiuso la connessione", skt.getRemoteAddress());
                     skt.close();
                     p.setPeerState(PeerState.CLOSE);
-                    closed++;
                     return;
                 }
                 header.position(16);

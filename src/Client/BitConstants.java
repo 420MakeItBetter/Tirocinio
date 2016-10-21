@@ -16,6 +16,7 @@ public class BitConstants {
     public static int PORT = 8333;
     public static int TIME = 1000;
     public static int CHECKSUM = 0xE2E0F65D;
+    public static int LASTBLOCK = 0;
     public static String [] DNS = new String [] {
                                                     "bitseed.xf2.org",
                                                     "dnsseed.bluematt.me",

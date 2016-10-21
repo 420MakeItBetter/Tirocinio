@@ -22,13 +22,14 @@ import java.util.concurrent.ConcurrentMap;
 public class Main {
 
 
-    public static boolean showLog=false;
+    public static boolean showLog=true;
 
     public static Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static SocketListener listener = new SocketListener();
 
     public static ConcurrentHashMap<InetAddress, Peer> peers = new ConcurrentHashMap<>();
+
 
     public static void main(String [] args) throws IOException {
 
@@ -68,14 +69,18 @@ public class Main {
         {
             startConnect(p.getAddress(),p.getPort());
         }
-        for(String s : BitConstants.DNS)
+        /*for(String s : BitConstants.DNS)
         {
             InetAddress [] addrs = InetAddress.getAllByName(s);
             for (InetAddress addr : addrs)
             {
-                startConnect(addr,BitConstants.PORT);
+                if(startConnect(addr,BitConstants.PORT))
+                    break;
             }
+            break;
         }
+        */
+
 
 
     }
@@ -97,7 +102,7 @@ public class Main {
         v.setNonce(new Random().nextLong());
         v.setVersion(BitConstants.VERSION);
         v.setUserAgent("TestClient.0.0.1");
-        v.setHeight(0);
+        v.setHeight(BitConstants.LASTBLOCK);
         v.setRelay(true);
 
         SocketChannel channel = null;

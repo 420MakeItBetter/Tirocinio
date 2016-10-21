@@ -24,10 +24,19 @@ public class AcceptTask implements Runnable{
         try
         {
             skt.configureBlocking(false);
-            Peer peer = new Peer(skt.socket().getInetAddress(),skt.socket().getPort());
+            Peer peer = null;
+            if(Main.peers.containsKey(skt.socket().getInetAddress()))
+                peer = Main.peers.get(skt.socket().getInetAddress());
+            else
+            {
+                peer = new Peer(skt.socket().getInetAddress(), skt.socket().getPort());
+                Main.peers.put(peer.getAddress(), peer);
+            }
+            peer.setPeerState(PeerState.HANDSAKE);
             Main.listener.addChannel(skt,SelectionKey.OP_READ,peer);
         } catch (IOException e)
         {
+
             e.printStackTrace();
         }
     }

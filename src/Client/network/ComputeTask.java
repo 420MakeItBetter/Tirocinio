@@ -45,7 +45,7 @@ public class ComputeTask implements Runnable {
             else if(m instanceof Ping)
                 pingResponse((Ping) m);
             else if(m instanceof Address)
-                saveAddressess((Address) m);
+                saveAddressees((Address) m);
         } catch (IOException e)
         {
             e.printStackTrace();
@@ -56,7 +56,7 @@ public class ComputeTask implements Runnable {
         p.setPeerState(PeerState.OPEN);
     }
 
-    private void saveAddressess(Address m) throws IOException {
+    private void saveAddressees(Address m) throws IOException {
         PeerAddress my = new PeerAddress();
         my.setService(0);
         my.setPort(8333);
@@ -77,7 +77,7 @@ public class ComputeTask implements Runnable {
                 v.setNonce(new Random().nextLong());
                 v.setVersion(BitConstants.VERSION);
                 v.setUserAgent("TestClient.0.0.1");
-                v.setHeight(0);
+                v.setHeight(BitConstants.LASTBLOCK);
                 v.setRelay(true);
                 SocketChannel skt = null;
                 try{
@@ -106,9 +106,11 @@ public class ComputeTask implements Runnable {
         VerAck ack = new VerAck();
         p.setPeerState(PeerState.OPEN);
         p.setService(m.getService());
-        p.setTimestamp((int) (System.currentTimeMillis()/ BitConstants.TIME));
+        p.setTimestamp((int) (System.currentTimeMillis() / BitConstants.TIME));
         p.setPort(m.getYourAddress().getPort());
         Connect.sendVerAck(ack,skt,p);
+        Runnable r = new AddressGetter(skt,p);
+        Main.listener.tasks.add(r);
     }
 
 
