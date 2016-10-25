@@ -16,6 +16,7 @@ import java.util.Random;
 
 /**
  * Created by Matteo on 12/10/2016.
+ *
  */
 public class ComputeTask implements Runnable {
 

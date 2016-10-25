@@ -13,6 +13,7 @@ import java.util.List;
  * @author Matteo Franceschi
  * @see Message
  *
+ *
  */
 public class Address extends Message {
 

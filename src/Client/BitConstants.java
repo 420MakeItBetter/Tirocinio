@@ -2,6 +2,7 @@ package Client;
 
 /**
  * Created by Matteo on 11/10/2016.
+ *
  */
 public class BitConstants {
 

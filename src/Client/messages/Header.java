@@ -8,6 +8,7 @@ import java.io.IOException;
 
 /**
  * Created by Matteo on 08/10/2016.
+ *
  */
 public class Header extends Message{
 

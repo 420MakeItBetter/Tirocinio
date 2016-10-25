@@ -9,6 +9,7 @@ import java.util.List;
 
 /**
  * Created by Matteo on 07/10/2016.
+ *
  */
 public class Inventory extends Message {
 

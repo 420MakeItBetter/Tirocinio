@@ -11,6 +11,7 @@ import java.io.IOException;
  * @author Matteo Franceschi
  * @see Message
  *
+ *
  */
 public class Alert extends Message {
 

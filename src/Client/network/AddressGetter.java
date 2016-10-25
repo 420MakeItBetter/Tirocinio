@@ -7,6 +7,7 @@ import java.nio.channels.SocketChannel;
 
 /**
  * Created by machiara on 21/10/16.
+ *
  */
 public class AddressGetter implements Runnable {
 

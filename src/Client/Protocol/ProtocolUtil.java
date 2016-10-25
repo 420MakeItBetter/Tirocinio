@@ -17,6 +17,7 @@ import java.nio.channels.SocketChannel;
 
 /**
  * Created by Matteo on 20/10/2016.
+ *
  */
 public class ProtocolUtil {
 

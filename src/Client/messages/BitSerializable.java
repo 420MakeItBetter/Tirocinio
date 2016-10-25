@@ -9,6 +9,7 @@ import java.io.IOException;
  * This is an interface that all the structures that can be serialized as Bitcoin Protocol structures need to implements
  *
  * @author Matteo Franceschi
+ *
  */
 public interface BitSerializable {
 

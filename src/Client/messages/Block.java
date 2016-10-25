@@ -12,6 +12,7 @@ import java.util.List;
  *
  * @author Matteo Franceschi
  * @see Client.messages.Message
+ *
  */
 public class Block extends Header {
 

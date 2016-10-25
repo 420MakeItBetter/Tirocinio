@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Created by Matteo on 11/10/2016.
+ *
  */
 public class Peer{
 

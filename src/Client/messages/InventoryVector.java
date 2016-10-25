@@ -9,6 +9,7 @@ import java.io.IOException;
 
 /**
  * Created by Matteo on 07/10/2016.
+ *
  */
 public class InventoryVector implements BitSerializable {
 

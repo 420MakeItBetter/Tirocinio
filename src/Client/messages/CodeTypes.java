@@ -2,6 +2,7 @@ package Client.messages;
 
 /**
  * Created by Matteo on 08/10/2016.
+ *
  */
 public enum CodeTypes {
     REJECT_MALFORMED,
