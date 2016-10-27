@@ -3,6 +3,7 @@ package Client;
 import Client.messages.PeerAddress;
 import Client.messages.Version;
 import Client.Protocol.Connect;
+import Client.network.InventoryStat;
 import Client.network.Peer;
 import Client.network.PeerState;
 import Client.network.SocketListener;
@@ -23,7 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 public class Main {
 
 
-    public static boolean showLog=true;
+    public static boolean showLog=false;
 
     public static Logger logger = LoggerFactory.getLogger(Main.class);
 
@@ -31,6 +32,7 @@ public class Main {
 
     public static ConcurrentHashMap<InetAddress, Peer> peers = new ConcurrentHashMap<>();
 
+    public static InventoryStat invStat = new InventoryStat();
 
     public static void main(String [] args) throws IOException {
 
@@ -68,65 +70,29 @@ public class Main {
         mainThread.start();
         for(Peer p : peers.values())
         {
-            startConnect(p.getAddress(),p.getPort());
+            try
+            {
+                Connect.connect(p.getAddress(), p.getPort());
+            }catch (IOException e)
+            {}
         }
-        /*for(String s : BitConstants.DNS)
+        for(String s : BitConstants.DNS)
         {
             InetAddress [] addrs = InetAddress.getAllByName(s);
             for (InetAddress addr : addrs)
             {
-                if(startConnect(addr,BitConstants.PORT))
-                    break;
+                if(!peers.containsKey(addr))
+                    try
+                    {
+                        Connect.connect(addr);
+                    }catch (IOException e)
+                    {}
             }
-            break;
         }
-        */
 
 
 
-    }
 
-    private static boolean startConnect(InetAddress addr,int port) throws IOException {
-        PeerAddress my = new PeerAddress();
-        my.setAddress(InetAddress.getByName("127.0.0.1"));
-        my.setPort(BitConstants.PORT);
-        my.setService(0);
-        PeerAddress your = new PeerAddress();
-        your.setAddress(addr);
-        your.setPort(port);
-        your.setService(0);
-        Version v = new Version();
-        v.setMyAddress(my);
-        v.setYourAddress(your);
-        v.setServices(0);
-        v.setTimestamp(System.currentTimeMillis() / BitConstants.TIME);
-        v.setNonce(new Random().nextLong());
-        v.setVersion(BitConstants.VERSION);
-        v.setUserAgent("TestClient.0.0.1");
-        v.setHeight(BitConstants.LASTBLOCK);
-        v.setRelay(true);
-
-        SocketChannel channel = null;
-        try
-        {
-            channel = Connect.connect(addr);
-        } catch (IOException e)
-        {
-            if(showLog)
-                logger.warn("{} irraggiungibile",addr);
-            return false;
-        }
-        if(showLog)
-            logger.info("Connesso a {}", addr);
-        Peer p = null;
-        if(peers.containsKey(addr))
-            p = peers.get(addr);
-        else
-            p = new Peer(addr, BitConstants.PORT);
-        p.setPeerState(PeerState.HANDSAKE);
-        peers.put(addr,p);
-        Connect.sendVersion(v, channel, p);
-        return true;
     }
 
 }

@@ -16,6 +16,7 @@ public class AcceptTask implements Runnable{
     SocketChannel skt;
 
     public AcceptTask(SocketChannel skt) {
+        Main.listener.acceptNumber.incrementAndGet();
         this.skt = skt;
     }
 
@@ -40,5 +41,6 @@ public class AcceptTask implements Runnable{
 
             e.printStackTrace();
         }
+        Main.listener.acceptNumber.decrementAndGet();
     }
 }

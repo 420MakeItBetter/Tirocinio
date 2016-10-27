@@ -22,13 +22,13 @@ import java.nio.channels.SocketChannel;
 public class ProtocolUtil {
 
     public static ByteBuffer writePayload(Message m) throws IOException {
-        ByteBuffer payload = ByteBuffer.allocate(m.getLength());
+        ByteBuffer payload = SerializedMessage.getBuffer(m.getLength());
         m.write(LittleEndianOutputStream.wrap(payload));
         return payload;
     }
 
     public static ByteBuffer writeHeader(Message m){
-        ByteBuffer header = ByteBuffer.allocate(BitConstants.HEADERLENGTH);
+        ByteBuffer header = SerializedMessage.getBuffer(BitConstants.HEADERLENGTH);
         header.put(BitConstants.MAGIC);
         header.put(m.getCommand().getBytes());
         header.position(BitConstants.LENGTHPOSITION);

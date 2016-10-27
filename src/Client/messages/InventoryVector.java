@@ -61,4 +61,21 @@ public class InventoryVector implements BitSerializable {
         leos.writeInt(type);
         leos.write(hash);
     }
+
+    public InventoryTypes getType() {
+        switch (type)
+        {
+            case 0 :
+                return InventoryTypes.ERROR;
+            case 1 :
+                return InventoryTypes.MSG_TX;
+            case 2 :
+                return InventoryTypes.MSG_BLOCK;
+            case 3 :
+                return InventoryTypes.MSG_FILTERED_BLOCK;
+            case 4 :
+                return InventoryTypes.MSG_CMPCT_BLOCK;
+        }
+        return null;
+    }
 }

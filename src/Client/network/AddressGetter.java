@@ -1,5 +1,6 @@
 package Client.network;
 
+import Client.Main;
 import Client.Protocol.Connect;
 
 import java.nio.channels.ClosedChannelException;
@@ -15,6 +16,7 @@ public class AddressGetter implements Runnable {
     Peer p;
 
     public AddressGetter(SocketChannel skt, Peer p) {
+        Main.listener.addressGetter.incrementAndGet();
         this.skt = skt;
         this.p = p;
     }
@@ -26,6 +28,6 @@ public class AddressGetter implements Runnable {
         } catch (ClosedChannelException e) {
             e.printStackTrace();
         }
-
+        Main.listener.addressGetter.decrementAndGet();
     }
 }

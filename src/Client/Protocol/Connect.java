@@ -19,6 +19,8 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.AbstractSelectableChannel;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Matteo on 17/10/2016.
@@ -26,26 +28,41 @@ import java.nio.channels.spi.AbstractSelectableChannel;
  */
 public class Connect {
 
-    public static SocketChannel connect(InetAddress address) throws IOException {
+
+    public static final AtomicInteger connections = new AtomicInteger();
+
+    public static void connect(InetAddress address) throws IOException {
+        //if(connections.get() > 8)
+        //    return;
         SocketChannel skt = SocketChannel.open();
-        try {
-            skt.socket().connect(new InetSocketAddress(address, BitConstants.PORT), 1000);
-        }catch (IOException e){
-            skt.close();
+        try
+        {
+            skt.configureBlocking(false);
+            skt.connect(new InetSocketAddress(address, BitConstants.PORT));
+            Main.listener.addChannel(skt, SelectionKey.OP_CONNECT, null);
         }
-        skt.configureBlocking(false);
-        return skt;
+        catch (IOException e)
+        {
+            skt.close();
+            throw e;
+        }
     }
 
-    public static SocketChannel connect(InetAddress address, int port) throws IOException {
+    public static void connect(InetAddress address, int port) throws IOException {
+        //if(connections.get() > 8)
+        //    return;
         SocketChannel skt = SocketChannel.open();
-        try {
-            skt.socket().connect(new InetSocketAddress(address,port),1000);
-        } catch (IOException e) {
-            skt.close();
+        try
+        {
+            skt.configureBlocking(false);
+            skt.connect(new InetSocketAddress(address, port));
+            Main.listener.addChannel(skt, SelectionKey.OP_CONNECT, null);
         }
-        skt.configureBlocking(false);
-        return skt;
+        catch (IOException e)
+        {
+            skt.close();
+            throw e;
+        }
     }
 
     public static void sendVersion(Version msg, SocketChannel channel, Peer p) throws IOException {

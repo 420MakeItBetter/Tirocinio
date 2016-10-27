@@ -34,4 +34,5 @@ public abstract class Message implements BitSerializable{
     public String toString() {
         return "Message: "+getCommand()+"\nLength: "+getLength()+"\nChecksum: "+getChecksum();
     }
+
 }

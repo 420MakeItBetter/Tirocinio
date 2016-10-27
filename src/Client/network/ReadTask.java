@@ -20,6 +20,7 @@ public class ReadTask implements Runnable{
     private SerializedMessage msg;
 
     public ReadTask(SocketChannel skt,Peer p,SerializedMessage msg) {
+        Main.listener.readNumber.incrementAndGet();
         this.skt = skt;
         this.p = p;
         this.msg = msg;
@@ -38,8 +39,19 @@ public class ReadTask implements Runnable{
         msg.setChecksum(msg.getHeader().getInt());
 
         Message m = createMessage(msg);
-        ComputeTask task = new ComputeTask(skt,p,m);
-        Main.listener.ex.execute(task);
+        if(m != null)
+        {
+            if(m instanceof UnknownMessage)
+                ((UnknownMessage) m).setCommand(msg.getCommand());
+            ComputeTask task = new ComputeTask(skt, p, m);
+            Main.listener.ex.execute(task);
+        }
+        SerializedMessage.addBuffer(msg.getHeader());
+        if(msg.getPayload() != null)
+            SerializedMessage.addBuffer(msg.getPayload());
+        msg = null;
+        Main.listener.readNumber.decrementAndGet();
+
     }
 
 
@@ -120,8 +132,9 @@ public class ReadTask implements Runnable{
             case "version" :
                 message = new Version();
                 break;
+            default:
+                message = new UnknownMessage();
         }
-
         message.setLength(msg.getSize());
         message.setChecksum(msg.getChecksum());
         try

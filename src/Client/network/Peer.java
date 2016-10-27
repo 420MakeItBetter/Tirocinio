@@ -22,12 +22,12 @@ public class Peer{
     private int port;
     private int timestamp;
     private long service;
-    private Queue<SerializedMessage> pendingMessages;
+    private ConcurrentLinkedQueue<SerializedMessage> pendingMessages;
     private SerializedMessage incompleteMsg;
     private PeerState state;
 
     public Peer(InetAddress addr,int port){
-        pendingMessages = new LinkedList<>();
+        pendingMessages = new ConcurrentLinkedQueue<>();
         this.addr = addr;
         this.port = port;
         state = PeerState.CLOSE;

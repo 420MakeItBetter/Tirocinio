@@ -3,6 +3,7 @@ package Client.network;
 
 import Client.BitConstants;
 import Client.Main;
+import Client.Protocol.Connect;
 import Client.messages.SerializedMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Matteo on 11/10/2016.
@@ -23,6 +25,11 @@ import java.util.concurrent.Executors;
  */
 public class SocketListener implements Runnable {
 
+    public  AtomicInteger acceptNumber;
+    public  AtomicInteger addressGetter;
+    public  AtomicInteger computeNumber;
+    public  AtomicInteger readNumber;
+    public AtomicInteger versionNumber;
     Selector selector;
     ConcurrentLinkedQueue<SelectorParam> queue;
     Executor ex;
@@ -32,6 +39,11 @@ public class SocketListener implements Runnable {
 
     public SocketListener(){
         logger = LoggerFactory.getLogger(SocketListener.class);
+        acceptNumber = new AtomicInteger();
+        addressGetter = new AtomicInteger();
+        computeNumber = new AtomicInteger();
+        readNumber = new AtomicInteger();
+        versionNumber = new AtomicInteger();
         try
         {
             selector = Selector.open();
@@ -70,6 +82,10 @@ public class SocketListener implements Runnable {
                     {
                         accept(key);
                     }
+                    if(key.isConnectable())
+                    {
+                        connect(key);
+                    }
                     else if(key.isReadable())
                     {
                         read(key);
@@ -96,8 +112,40 @@ public class SocketListener implements Runnable {
                 e.printStackTrace();
             }
         }
+        for(SelectionKey k : selector.keys()){
+            try
+            {
+                k.channel().close();
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
 
 
+    }
+
+    private void connect(SelectionKey key) {
+        SocketChannel skt = (SocketChannel) key.channel();
+        try
+        {
+            if(skt.finishConnect())
+            {
+                Connect.connections.incrementAndGet();
+                VersionTask task = new VersionTask(skt);
+                ex.execute(task);
+                addChannel(skt, 0, null);
+            }
+        } catch (IOException e)
+        {
+            try
+            {
+                skt.close();
+            } catch (IOException e1)
+            {
+                e1.printStackTrace();
+            }
+        }
     }
 
     private void write(SelectionKey key) {
@@ -106,6 +154,11 @@ public class SocketListener implements Runnable {
         SerializedMessage msg = p.peekMsg();
         try
         {
+            if(msg == null)
+            {
+                addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
+                return;
+            }
             if(msg.getPayload() != null)
             {
                 if(Main.showLog)
@@ -113,7 +166,11 @@ public class SocketListener implements Runnable {
                 else
                     skt.write(new ByteBuffer[]{msg.getHeader(), msg.getPayload()});
                 if (msg.getPayload().position() == msg.getPayload().capacity())
+                {
                     p.poolMsg();
+                    SerializedMessage.addBuffer(msg.getHeader());
+                    SerializedMessage.addBuffer(msg.getPayload());
+                }
                 if (p.hasNoPendingMessage())
                     addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
             }
@@ -124,7 +181,10 @@ public class SocketListener implements Runnable {
                 else
                     skt.write(msg.getHeader());
                 if (msg.getHeader().position() == msg.getHeader().capacity())
+                {
                     p.poolMsg();
+                    SerializedMessage.addBuffer(msg.getHeader());
+                }
                 if (p.hasNoPendingMessage())
                     addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
             }
@@ -141,7 +201,7 @@ public class SocketListener implements Runnable {
         if(p.getMsg() == null)
         {
             msg = new SerializedMessage();
-            ByteBuffer header = ByteBuffer.allocate(4 + 12 + 4 + 4);
+            ByteBuffer header = SerializedMessage.getBuffer(4 + 12 + 4 + 4);
             msg.setHeader(header);
             try
             {
@@ -152,6 +212,7 @@ public class SocketListener implements Runnable {
                         logger.error("il Peer {} ha chiuso la connessione", skt.getRemoteAddress());
                     skt.close();
                     p.setPeerState(PeerState.CLOSE);
+                    SerializedMessage.addBuffer(header);
                     return;
                 }
                 header.position(16);
@@ -161,12 +222,13 @@ public class SocketListener implements Runnable {
                 msg.setSize(size);
                 if(size > 0)
                 {
-                    ByteBuffer payload = ByteBuffer.allocate(size);
+                    ByteBuffer payload = SerializedMessage.getBuffer(size);
                     msg.setPayload(payload);
                 }
             } catch (IOException e)
             {
-                e.printStackTrace();
+               // e.printStackTrace();
+                return;
             }
         }
         else

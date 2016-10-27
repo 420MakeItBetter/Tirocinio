@@ -1,5 +1,6 @@
 package Client;
 
+import Client.messages.SerializedMessage;
 import Client.network.Peer;
 import Client.network.PeerState;
 
@@ -52,6 +53,12 @@ public class MainThread implements Runnable {
                                 break;
                         }
                     System.out.println("Connessioni aperte: "+open+"\nConnessioni in fase di handshake: "+handshake+"\nConnessioni chiuse: "+close+"\nConnessioni totali:"+(open+handshake+close));
+                    break;
+                case "inv" :
+                    System.out.println("Errors:"+Main.invStat.error.get()+"\nTransactions:"+Main.invStat.transiction.get()+"\nBlocks:"+Main.invStat.block.get()+"\nFiltered Block:"+Main.invStat.filtered_block.get()+"\nCMPCT Blocks:"+Main.invStat.cmpct_block.get());
+                    break;
+                case "mem" :
+                    System.out.println("Acceptor:"+Main.listener.acceptNumber.get()+"\nAddressGetter:"+Main.listener.addressGetter.get()+"\nComputeTaks:"+Main.listener.computeNumber.get()+"\nReader:"+Main.listener.readNumber.get()+"\nVersionTasks:"+Main.listener.versionNumber.get());
                 default:
                     break;
 
