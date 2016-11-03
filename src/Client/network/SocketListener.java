@@ -17,6 +17,7 @@ import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -30,6 +31,8 @@ public class SocketListener implements Runnable {
     public  AtomicInteger computeNumber;
     public  AtomicInteger readNumber;
     public AtomicInteger versionNumber;
+
+
     Selector selector;
     ConcurrentLinkedQueue<SelectorParam> queue;
     Executor ex;
@@ -132,7 +135,7 @@ public class SocketListener implements Runnable {
             if(skt.finishConnect())
             {
                 Connect.connections.incrementAndGet();
-                VersionTask task = new VersionTask(skt);
+                VersionTask task = new VersionTask(skt, (Peer) key.attachment());
                 ex.execute(task);
                 addChannel(skt, 0, null);
             }
@@ -140,6 +143,9 @@ public class SocketListener implements Runnable {
         {
             try
             {
+                Peer p = (Peer) key.attachment();
+                p.incrementAttempt();
+                Main.oldnotConnectedAdressess.add(p);
                 skt.close();
             } catch (IOException e1)
             {
@@ -161,58 +167,106 @@ public class SocketListener implements Runnable {
             }
             if(msg.getPayload() != null)
             {
-                if(Main.showLog)
-                    logger.info("Scritto messaggio {} inviati {} byte", msg.getCommand(), skt.write(new ByteBuffer[]{msg.getHeader(), msg.getPayload()}));
-                else
-                    skt.write(new ByteBuffer[]{msg.getHeader(), msg.getPayload()});
-                if (msg.getPayload().position() == msg.getPayload().capacity())
+                skt.write(msg.getHeader());
+                skt.write(msg.getPayload());
+                if (msg.getPayload()[msg.getPayload().length - 1].position() == msg.getPayload()[msg.getPayload().length - 1].limit())
                 {
                     p.poolMsg();
-                    SerializedMessage.addBuffer(msg.getHeader());
-                    SerializedMessage.addBuffer(msg.getPayload());
+                    SerializedMessage.returnHeader(msg.getHeader());
+                    SerializedMessage.returnPayload(msg.getPayload());
                 }
                 if (p.hasNoPendingMessage())
                     addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
             }
             else
             {
-                if(Main.showLog)
-                    logger.info("Scritto messaggio {} inviati {} byte",msg.getCommand(), skt.write(msg.getHeader()));
-                else
-                    skt.write(msg.getHeader());
+                skt.write(msg.getHeader());
                 if (msg.getHeader().position() == msg.getHeader().capacity())
                 {
                     p.poolMsg();
-                    SerializedMessage.addBuffer(msg.getHeader());
+                    SerializedMessage.returnHeader(msg.getHeader());
                 }
                 if (p.hasNoPendingMessage())
                     addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
             }
         } catch (IOException e)
         {
-            e.printStackTrace();
-        }
+            while(!p.hasNoPendingMessage())
+            {
+                SerializedMessage m = p.poolMsg();
+                try
+                {
+                    SerializedMessage.returnHeader(m.getHeader());
+                } catch (InterruptedException e1)
+                {
+                    e1.printStackTrace();
+                }
+                try
+                {
+                    SerializedMessage.returnPayload(m.getPayload());
+                } catch (InterruptedException e1)
+                {
+                    e1.printStackTrace();
+                }
+            }
+            SerializedMessage m = p.getMsg();
+            if(m != null)
+            {
+                    try
+                    {
+                        SerializedMessage.returnHeader(m.getHeader());
+                    } catch (InterruptedException e1)
+                    {
+                    }
+                    try
+                    {
+                        SerializedMessage.returnPayload(m.getPayload());
+                    } catch (InterruptedException e1)
+                    {
+                    }
+            }
+            p.setPeerState(PeerState.CLOSE);
+            p.incrementAttempt();
+            Main.oldnotConnectedAdressess.add(p);
+            //e.printStackTrace();
+        } catch (InterruptedException e)
+        {}
     }
 
     private void read(SelectionKey key) {
         SocketChannel skt = (SocketChannel) key.channel();
         Peer p = (Peer) key.attachment();
         SerializedMessage msg = null;
+        //non ho iniziato a leggere il nuovo messaggio
         if(p.getMsg() == null)
         {
+            //lo creo
             msg = new SerializedMessage();
-            ByteBuffer header = SerializedMessage.getBuffer(4 + 12 + 4 + 4);
+            //prendo un header
+            ByteBuffer header = SerializedMessage.newHeader();
+            //se non ce ne sono disponibili ritorno quindi la prossima volta il peer di nuovo non avra' il messagio pronto
+            if(header == null)
+                return;
+            //setto l'header
             msg.setHeader(header);
             try
             {
                 long read = skt.read(header);
+                //se il canale e' stato chiuso allora la connessione e' stata chiusa
                 if(read == -1)
                 {
+
                     if(Main.showLog)
                         logger.error("il Peer {} ha chiuso la connessione", skt.getRemoteAddress());
+                    //chiudo il socket
                     skt.close();
+                    //setto lo stato del peer
                     p.setPeerState(PeerState.CLOSE);
-                    SerializedMessage.addBuffer(header);
+                    //ritorno il buffer preso
+                    p.incrementAttempt();
+                    Main.oldnotConnectedAdressess.add(p);
+                    SerializedMessage.returnHeader(header);
+
                     return;
                 }
                 header.position(16);
@@ -220,39 +274,85 @@ public class SocketListener implements Runnable {
                 header.get(b);
                 int size = ((b[3] & 0xFF) << 24 | (b[2] & 0xFF) << 16 | (b[1] & 0xFF) << 8 | (b[0] & 0xFF));
                 msg.setSize(size);
+                //se il size del messaggio e' maggiore di 0 devo creare un payload per il messaggio
                 if(size > 0)
                 {
-                    ByteBuffer payload = SerializedMessage.getBuffer(size);
+                    ByteBuffer [] payload = SerializedMessage.newPayload(size);
+                    //se non e' disponibile un payload della dimensione richiesta
+                    if(payload == null)
+                    {
+                        //salvo nel peer il messaggio con l'header e ritorno, la prossima volta che provo a leggere questo codice
+                        //non sara' eseguito
+                        p.setMsg(msg);
+                        return;
+                    }
                     msg.setPayload(payload);
                 }
             } catch (IOException e)
             {
                // e.printStackTrace();
+                try
+                {
+                    SerializedMessage.returnHeader(header);
+                } catch (InterruptedException e1)
+                {}
+                p.incrementAttempt();
+                p.setPeerState(PeerState.CLOSE);
+                Main.oldnotConnectedAdressess.add(p);
                 return;
-            }
+            } catch (InterruptedException e)
+            {}
         }
         else
         {
             msg = p.getMsg();
             p.setMsg(null);
         }
+        //se il size del messaggio e' maggiore di 0
         if(msg.getSize() > 0)
         {
+            //controllo se il payload e' presente
+            if(msg.getPayload() == null)
+            {
+                //altrimenti provo a prenderne uno
+                msg.setPayload(SerializedMessage.newPayload(msg.getSize()));
+                //se e' ancora null ritorno e riprovero' dopo
+                if(msg.getPayload() == null)
+                {
+                    p.setMsg(msg);
+                    return;
+                }
+            }
             try
             {
                 skt.read(msg.getPayload());
-                if(msg.getPayload().position() < msg.getPayload().capacity())
+                if(msg.getPayload()[msg.getPayload().length - 1].position() < msg.getPayload()[msg.getPayload().length - 1].limit())
                 {
                     p.setMsg(msg);
+                    return;
                 }
-                else
-                {
-                    ReadTask task = new ReadTask(skt,p,msg);
-                    ex.execute(task);
-                }
+
+                ReadTask task = new ReadTask(skt,p,msg);
+                ex.execute(task);
             } catch (IOException e)
             {
-                e.printStackTrace();
+                try
+                {
+                    skt.close();
+                } catch (IOException e1)
+                {
+                    e1.printStackTrace();
+                }
+                p.incrementAttempt();
+                p.setPeerState(PeerState.CLOSE);
+                try
+                {
+                    SerializedMessage.returnHeader(msg.getHeader());
+                    SerializedMessage.returnPayload(msg.getPayload());
+                } catch (InterruptedException e1)
+                {}
+                Main.oldnotConnectedAdressess.add(p);
+                //e.printStackTrace();
             }
         }
         else

@@ -27,6 +27,9 @@ public class AddressGetter implements Runnable {
             Connect.sendGetAddress(skt,p);
         } catch (ClosedChannelException e) {
             e.printStackTrace();
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
         }
         Main.listener.addressGetter.decrementAndGet();
     }

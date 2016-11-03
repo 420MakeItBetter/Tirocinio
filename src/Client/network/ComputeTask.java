@@ -14,6 +14,7 @@ import java.net.InetAddress;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Matteo on 12/10/2016.
@@ -54,6 +55,13 @@ public class ComputeTask implements Runnable {
         } catch (IOException e)
         {
             e.printStackTrace();
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        catch (NullPointerException e)
+        {
+            e.printStackTrace();
         }
         Main.listener.computeNumber.decrementAndGet();
     }
@@ -84,6 +92,9 @@ public class ComputeTask implements Runnable {
         } catch (IOException e)
         {
             e.printStackTrace();
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
         }
 
     }
@@ -95,22 +106,38 @@ public class ComputeTask implements Runnable {
     private void saveAddressees(Address m) throws IOException {
         for(PeerAddress p : m.getAddresses())
         {
-            if(!Main.peers.containsKey(p.getAddress()))
-                Connect.connect(p.getAddress(),p.getPort());
+            if(!Main.peers.containsKey(p.getAddress().getHostAddress()))
+            {
+                Peer peer = new Peer(p.getAddress(),p.getPort());
+                peer.setTimestamp(p.getTime());
+                peer.setService(p.getService());
+                Main.peers.put(p.getAddress().getHostAddress(),peer);
+                Main.newnotConnectedAdressess.add(peer);
+            }
             else
             {
-                Peer peer = Main.peers.get(p.getAddress());
+                Peer peer = Main.peers.get(p.getAddress().getHostAddress());
                 if(peer.getTimestamp() < p.getTime())
                     peer.setTimestamp(p.getTime());
             }
         }
     }
 
-    private void pingResponse(Ping m) throws IOException {
+    private void pingResponse(Ping m) throws IOException, InterruptedException {
         KeepAlive.sendPong(m,skt,p);
     }
 
-    private void versionResponse(Version m) throws ClosedChannelException {
+    private void versionResponse(Version m) throws ClosedChannelException, InterruptedException {
+        AtomicInteger number = Main.userAgents.get(m.getUserAgent());
+        if(number == null)
+            number = new AtomicInteger();
+        AtomicInteger t = Main.userAgents.put(m.getUserAgent(),number);
+        if(t != null)
+        {
+            Main.userAgents.put(m.getUserAgent(), t);
+            number = t;
+        }
+        number.incrementAndGet();
         VerAck ack = new VerAck();
         p.setPeerState(PeerState.OPEN);
         p.setService(m.getService());

@@ -12,9 +12,9 @@ import java.nio.channels.SocketChannel;
  */
 public class InventoryProtocol {
 
-    public static void sendInventory(Inventory msg,SocketChannel skt, Peer p) throws IOException {
+    public static void sendInventory(Inventory msg,SocketChannel skt, Peer p) throws IOException, InterruptedException {
         ByteBuffer header = ProtocolUtil.writeHeader(msg);
-        ByteBuffer payload = ProtocolUtil.writePayload(msg);
+        ByteBuffer[] payload = ProtocolUtil.writePayload(msg);
         header.put(ProtocolUtil.getChecksum(payload));
 
         ProtocolUtil.sendMessage(header,payload,skt,p);

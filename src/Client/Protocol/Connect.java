@@ -10,6 +10,7 @@ import io.nayuki.bitcoin.crypto.Sha256;
 import io.nayuki.bitcoin.crypto.Sha256Hash;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketOptions;
@@ -31,15 +32,13 @@ public class Connect {
 
     public static final AtomicInteger connections = new AtomicInteger();
 
-    public static void connect(InetAddress address) throws IOException {
-        //if(connections.get() > 8)
-        //    return;
+    public static void connect(InetAddress address,Peer p) throws IOException {
         SocketChannel skt = SocketChannel.open();
         try
         {
             skt.configureBlocking(false);
             skt.connect(new InetSocketAddress(address, BitConstants.PORT));
-            Main.listener.addChannel(skt, SelectionKey.OP_CONNECT, null);
+            Main.listener.addChannel(skt, SelectionKey.OP_CONNECT, p);
         }
         catch (IOException e)
         {
@@ -48,15 +47,13 @@ public class Connect {
         }
     }
 
-    public static void connect(InetAddress address, int port) throws IOException {
-        //if(connections.get() > 8)
-        //    return;
+    public static void connect(InetAddress address, int port, Peer p) throws IOException {
         SocketChannel skt = SocketChannel.open();
         try
         {
             skt.configureBlocking(false);
             skt.connect(new InetSocketAddress(address, port));
-            Main.listener.addChannel(skt, SelectionKey.OP_CONNECT, null);
+            Main.listener.addChannel(skt, SelectionKey.OP_CONNECT, p);
         }
         catch (IOException e)
         {
@@ -65,16 +62,16 @@ public class Connect {
         }
     }
 
-    public static void sendVersion(Version msg, SocketChannel channel, Peer p) throws IOException {
+    public static void sendVersion(Version msg, SocketChannel channel, Peer p) throws IOException, InterruptedException {
         ByteBuffer header = ProtocolUtil.writeHeader(msg);
-        ByteBuffer payload = ProtocolUtil.writePayload(msg);
+        ByteBuffer[] payload = ProtocolUtil.writePayload(msg);
         header.put(ProtocolUtil.getChecksum(payload));
 
         ProtocolUtil.sendMessage(header,payload,channel,p);
     }
 
 
-    public static void sendVerAck(VerAck msg,SocketChannel skt, Peer p) throws ClosedChannelException {
+    public static void sendVerAck(VerAck msg,SocketChannel skt, Peer p) throws ClosedChannelException, InterruptedException {
         ByteBuffer message = ProtocolUtil.writeHeader(msg);
         message.position(BitConstants.CHECKSUMPOSITION);
         message.put(IOUtils.intToByteArray(BitConstants.CHECKSUM));
@@ -84,7 +81,7 @@ public class Connect {
     }
 
 
-    public static void sendAddresses(SocketChannel skt, Peer p) throws IOException {
+    public static void sendAddresses(SocketChannel skt, Peer p) throws IOException, InterruptedException {
         Address addr = new Address();
         for(Peer peer : Main.peers.values())
         {
@@ -96,14 +93,14 @@ public class Connect {
             addr.getAddresses().add(pa);
         }
         ByteBuffer header = ProtocolUtil.writeHeader(addr);
-        ByteBuffer payload = ProtocolUtil.writePayload(addr);
+        ByteBuffer[] payload = ProtocolUtil.writePayload(addr);
         header.put(ProtocolUtil.getChecksum(payload));
 
         ProtocolUtil.sendMessage(header,payload,skt,p);
 
     }
 
-    public static void sendGetAddress(SocketChannel skt, Peer p) throws ClosedChannelException {
+    public static void sendGetAddress(SocketChannel skt, Peer p) throws ClosedChannelException, InterruptedException {
         GetAddress ga = new GetAddress();
         ByteBuffer message = ProtocolUtil.writeHeader(ga);
         message.put(IOUtils.intToByteArray(BitConstants.CHECKSUM));

@@ -379,5 +379,49 @@ public class LittleEndianInputStream extends FilterInputStream {
 		});
 		return leis;
 	}
+
+	public static LittleEndianInputStream wrap(ByteBuffer [] b){
+		LittleEndianInputStream leis = new LittleEndianInputStream(new InputStream() {
+			ByteBuffer [] bb = b;
+			int i = 0;
+			@Override
+			public synchronized int read() throws IOException {
+				while(i < bb.length && !bb[i].hasRemaining())
+					i++;
+				if(i == bb.length)
+					return -1;
+				return bb[i].get();
+			}
+
+			public synchronized int read(byte[] bytes, int off, int len) throws IOException {
+				// Read only what's left
+				int length = 0;
+				while(i < bb.length && len > bb[i].remaining())
+				{
+					len-= bb[i].remaining();
+					int tmp = bb[i].remaining();
+					bb[i].get(bytes,off,bb[i].remaining());
+					off+= tmp;
+					length+=tmp;
+					i++;
+				}
+				if(i < bb.length)
+				{
+					bb[i].get(bytes,off,len);
+					length+=len;
+				}
+				return length;
+			}
+
+			@Override
+			public int available() throws IOException {
+				int ava = 0;
+				for(int j = i; j < bb.length; j++)
+					ava+=bb[j].remaining();
+				return ava;
+			}
+		});
+		return leis;
+	}
 }
 

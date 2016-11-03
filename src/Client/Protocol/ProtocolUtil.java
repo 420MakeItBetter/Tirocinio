@@ -21,14 +21,14 @@ import java.nio.channels.SocketChannel;
  */
 public class ProtocolUtil {
 
-    public static ByteBuffer writePayload(Message m) throws IOException {
-        ByteBuffer payload = SerializedMessage.getBuffer(m.getLength());
+    public static ByteBuffer[] writePayload(Message m) throws IOException, InterruptedException {
+        ByteBuffer[] payload = SerializedMessage.newBlockingPayload(m.getLength());
         m.write(LittleEndianOutputStream.wrap(payload));
         return payload;
     }
 
-    public static ByteBuffer writeHeader(Message m){
-        ByteBuffer header = SerializedMessage.getBuffer(BitConstants.HEADERLENGTH);
+    public static ByteBuffer writeHeader(Message m) throws InterruptedException {
+        ByteBuffer header = SerializedMessage.newBlockingHeader();
         header.put(BitConstants.MAGIC);
         header.put(m.getCommand().getBytes());
         header.position(BitConstants.LENGTHPOSITION);
@@ -36,14 +36,23 @@ public class ProtocolUtil {
         return header;
     }
 
-    public static byte [] getChecksum(ByteBuffer payload){
-        return IOUtils.getChecksum(Sha256.getDoubleHash(payload.array()).toBytes());
+    public static byte [] getChecksum(ByteBuffer [] payload){
+
+        for(ByteBuffer b : payload)
+            b.flip();
+        byte [] msg = new byte[(payload.length - 1)*500 + payload[payload.length - 1].limit()];
+        int i;
+        for(i = 0; i < payload.length - 1; i++)
+            payload[i].get(msg,i*500,500);
+        payload[payload.length - 1].get(msg,i*500,payload[payload.length - 1].limit());
+            return IOUtils.getChecksum(Sha256.getDoubleHash(msg).toBytes());
     }
 
-    public static void sendMessage(ByteBuffer header, ByteBuffer payload, SocketChannel skt, Peer p) throws ClosedChannelException {
+    public static void sendMessage(ByteBuffer header, ByteBuffer [] payload, SocketChannel skt, Peer p) throws ClosedChannelException {
         header.rewind();
         if(payload != null)
-            payload.rewind();
+            for(int i = 0; i < payload.length; i++)
+                payload[i].flip();
 
         SerializedMessage message = new SerializedMessage();
 

@@ -1,9 +1,13 @@
 package Client.messages;
 
+import Client.BitConstants;
+
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by Matteo on 11/10/2016.
@@ -11,31 +15,121 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class SerializedMessage {
 
-    public static final ConcurrentHashMap<Integer,ConcurrentLinkedQueue<ByteBuffer>> unusedBuffer = new ConcurrentHashMap<>();
+    public static final BlockingQueue<ByteBuffer> headers = new LinkedBlockingQueue<>();
+    public static final BlockingQueue<ByteBuffer> payloads = new LinkedBlockingQueue<>();
+    public static final AtomicLong headerC = new AtomicLong();
+    public static final AtomicLong payloadC = new AtomicLong();
+
     private ByteBuffer header;
-    private ByteBuffer payload;
+    private ByteBuffer [] payload;
     private String command;
     private int checksum;
     private int size;
 
-    public static ByteBuffer getBuffer(int length){
-        ConcurrentLinkedQueue<ByteBuffer> buffers = unusedBuffer.get(length);
-        ByteBuffer buffer = null;
-        if(buffers != null)
-            buffer = buffers.poll();
-        if(buffer == null)
-            buffer = ByteBuffer.allocate(length);
-        buffer.clear();
-        return buffer;
+    public static void initializeBuffers(){
+        //creo 4.166.666 bytebuffer per gli header
+        for(int i = 0; i < BitConstants.MEGA*100; i+=BitConstants.HEADERLENGTH)
+        {
+            headers.add(ByteBuffer.allocate(BitConstants.HEADERLENGTH));
+            headerC.incrementAndGet();
+        }
+
+        //creo 6.249.999 bytebuffer di 500 byte per i payload
+        for(long i = 0; i < BitConstants.GIGA+BitConstants.GIGA+BitConstants.GIGA+(BitConstants.MEGA*125); i+=500)
+        {
+            payloads.add(ByteBuffer.allocate(500));
+            payloadC.incrementAndGet();
+        }
     }
 
-    public static void addBuffer(ByteBuffer buffer){
-        if(!unusedBuffer.containsKey(buffer.capacity()))
-            unusedBuffer.put(buffer.capacity(),new ConcurrentLinkedQueue<>());
-        unusedBuffer.get(buffer.capacity()).add(buffer);
+    public static ByteBuffer newHeader() {
+        ByteBuffer b = headers.poll();
+        headerC.decrementAndGet();
+        return b;
+    }
+
+    public static ByteBuffer [] newPayload(int size) {
+        int l = size/500;
+        boolean failed = false;
+        ByteBuffer [] ret = new ByteBuffer [l + 1];
+        int i;
+        for(i = 0; i < l; i+=1)
+        {
+            ret[i] = payloads.poll();
+            if(ret[i] == null)
+            {
+                failed = true;
+                break;
+            }
+            payloadC.decrementAndGet();
+        }
+        if(failed)
+            for(int j = 0; j < i; j++)
+            {
+                payloadC.incrementAndGet();
+                payloads.add(ret[j]);
+            }
+        else
+        {
+            ret[ret.length - 1] = payloads.poll();
+            if(ret[ret.length - 1] == null)
+                for(int j = 0; j < i; j++)
+                {
+                    payloadC.incrementAndGet();
+                    payloads.add(ret[j]);
+                }
+            else
+            {
+                payloadC.decrementAndGet();
+                ret[ret.length - 1].limit(size - l * 500);
+                return ret;
+            }
+        }
+        return null;
+    }
+
+    public static ByteBuffer newBlockingHeader() throws InterruptedException {
+        ByteBuffer b = headers.take();
+        headerC.decrementAndGet();
+        return b;
+    }
+
+    public static ByteBuffer[] newBlockingPayload(int size) throws InterruptedException {
+        int l = size/500;
+        ByteBuffer [] ret = new ByteBuffer [l + 1];
+        int i;
+        for(i = 0; i < l; i+=1)
+        {
+            ret[i] = payloads.take();
+            payloadC.decrementAndGet();
+        }
+        payloadC.decrementAndGet();
+        ret[ret.length - 1] = payloads.take();
+        ret[ret.length - 1].limit(size - l * 500);
+        return ret;
+    }
+
+    public static void returnHeader(ByteBuffer header) throws InterruptedException {
+        if(header == null)
+            return;
+        header.clear();
+        headerC.incrementAndGet();
+        headers.put(header);
+    }
+
+    public static void returnPayload(ByteBuffer [] payload) throws InterruptedException {
+        if(payload == null)
+            return;
+        for(int i = 0; i < payload.length; i++)
+        {
+            payloadC.incrementAndGet();
+            payload[i].clear();
+            payloads.put(payload[i]);
+        }
     }
 
     public SerializedMessage(){}
+
 
     public void setCommand(String command) {
         this.command = command;
@@ -45,7 +139,6 @@ public class SerializedMessage {
         this.size = size;
     }
 
-
     public void setHeader(ByteBuffer header) {
         this.header = header;
     }
@@ -54,11 +147,11 @@ public class SerializedMessage {
         return header;
     }
 
-    public void setPayload(ByteBuffer payload) {
+    public void setPayload(ByteBuffer [] payload) {
         this.payload = payload;
     }
 
-    public ByteBuffer getPayload() {
+    public ByteBuffer [] getPayload() {
         return payload;
     }
 
@@ -81,5 +174,11 @@ public class SerializedMessage {
     @Override
     public String toString() {
         return "command: "+command+" size "+size+" checksum "+checksum;
+    }
+
+    public void flipPayload() {
+        if(payload != null)
+            for(ByteBuffer b : payload)
+                b.flip();
     }
 }

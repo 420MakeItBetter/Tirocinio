@@ -19,11 +19,13 @@ import java.util.Random;
 public class VersionTask implements Runnable {
 
     private SocketChannel skt;
+    private Peer p;
     private static final Random random = new Random();
 
-    public VersionTask(SocketChannel skt){
+    public VersionTask(SocketChannel skt,Peer p){
         Main.listener.versionNumber.incrementAndGet();
         this.skt = skt;
+        this.p = p;
     }
 
     @Override
@@ -35,9 +37,9 @@ public class VersionTask implements Runnable {
             my.setPort(BitConstants.PORT);
             my.setService(0);
             PeerAddress your = new PeerAddress();
-            your.setAddress(((InetSocketAddress) skt.getRemoteAddress()).getAddress());
-            your.setPort(((InetSocketAddress) skt.getRemoteAddress()).getPort());
-            your.setService(0);
+            your.setAddress(p.getAddress());
+            your.setPort(p.getPort());
+            your.setService(p.getService());
             Version v = new Version();
             v.setMyAddress(my);
             v.setYourAddress(your);
@@ -48,15 +50,12 @@ public class VersionTask implements Runnable {
             v.setUserAgent("TestClient.0.0.1");
             v.setHeight(BitConstants.LASTBLOCK);
             v.setRelay(true);
-            Peer p = null;
-            if(Main.peers.containsKey(your.getAddress()))
-                p = Main.peers.get(your.getAddress());
-            else
-                p = new Peer(your.getAddress(), your.getPort());
             p.setPeerState(PeerState.HANDSAKE);
-            Main.peers.put(p.getAddress(),p);
             Connect.sendVersion(v, skt, p);
         } catch (IOException e)
+        {
+            e.printStackTrace();
+        } catch (InterruptedException e)
         {
             e.printStackTrace();
         }

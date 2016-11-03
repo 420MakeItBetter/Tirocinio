@@ -214,14 +214,41 @@ public class Alert extends Message {
             cancelSet[i] = leis.readInt();
         minVer = leis.readInt();
         maxVer = leis.readInt();
-        length = (int) leis.readVariableSize();
-        subVerSet = new String [length];
-        for(int i = 0; i < length; i++)
-            subVerSet[i] = leis.readString();
+        try
+        {
+            length = (int) leis.readVariableSize();
+        }catch (RuntimeException e)
+        {
+            length = 0;
+        }
+        if(length != 0)
+        {
+            subVerSet = new String[length];
+            for (int i = 0; i < length; i++)
+                subVerSet[i] = leis.readString();
+        }
         priority = leis.readInt();
-        comment = leis.readString();
-        statusBar = leis.readString();
-        reserved = leis.readString();
+        try
+        {
+            comment = leis.readString();
+        }catch (RuntimeException e)
+        {
+            comment = null;
+        }
+        try
+        {
+
+            statusBar = leis.readString();
+        }catch (RuntimeException e)
+        {
+            statusBar = null;
+        }
+        try{
+            reserved = leis.readString();
+        }catch (RuntimeException e)
+        {
+            reserved = null;
+        }
     }
 
     /**

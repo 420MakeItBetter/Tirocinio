@@ -21,9 +21,8 @@ public class Version extends Message{
     private int height;
     private boolean relay;
 
-
     public Version(){
-        setLength(4 + 8 + 8 + 26 + 26 + 8 + 18 + 4 + 1);
+        setLength(4 + 8 + 8 + 26 + 26 + 8 + 17 + 4 + 1);
     }
 
     @Override
@@ -114,5 +113,9 @@ public class Version extends Message{
 
     public long getService() {
         return services;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
     }
 }

@@ -16,9 +16,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Created by Matteo on 11/10/2016.
  *
  */
-public class Peer{
+public class Peer implements Comparable<Peer>{
 
     private InetAddress addr;
+    private int attempt;
     private int port;
     private int timestamp;
     private long service;
@@ -27,6 +28,7 @@ public class Peer{
     private PeerState state;
 
     public Peer(InetAddress addr,int port){
+        attempt = 0;
         pendingMessages = new ConcurrentLinkedQueue<>();
         this.addr = addr;
         this.port = port;
@@ -100,6 +102,18 @@ public class Peer{
 
     public PeerState getPeerState() {
         return state;
+    }
+
+    @Override
+    public int compareTo(Peer o) {
+        int res = this.attempt - o.attempt;
+        if(res == 0)
+            res = o.timestamp - this.timestamp;
+        return res;
+    }
+
+    public void incrementAttempt() {
+        attempt++;
     }
 }
 

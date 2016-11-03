@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 /**
@@ -31,7 +32,7 @@ public class ReadTask implements Runnable{
         byte [] command = new byte [12];
         msg.getHeader().rewind();
         if(msg.getPayload() != null)
-            msg.getPayload().rewind();
+            msg.flipPayload();
         msg.getHeader().position(4);
         msg.getHeader().get(command);
         msg.setCommand(new String(command).trim());
@@ -46,9 +47,21 @@ public class ReadTask implements Runnable{
             ComputeTask task = new ComputeTask(skt, p, m);
             Main.listener.ex.execute(task);
         }
-        SerializedMessage.addBuffer(msg.getHeader());
+        try
+        {
+            SerializedMessage.returnHeader(msg.getHeader());
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
         if(msg.getPayload() != null)
-            SerializedMessage.addBuffer(msg.getPayload());
+            try
+            {
+                SerializedMessage.returnPayload(msg.getPayload());
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
         msg = null;
         Main.listener.readNumber.decrementAndGet();
 
@@ -141,7 +154,7 @@ public class ReadTask implements Runnable{
         {
             message.read(LittleEndianInputStream.wrap(msg.getPayload()));
             return message;
-        } catch (IOException e)
+        } catch (IOException | NullPointerException e)
         {
             e.printStackTrace();
         }

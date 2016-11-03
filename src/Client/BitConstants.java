@@ -1,5 +1,7 @@
 package Client;
 
+import javax.swing.plaf.PanelUI;
+
 /**
  * Created by Matteo on 11/10/2016.
  *
@@ -7,7 +9,10 @@ package Client;
 public class BitConstants {
 
 
-    public static int HEADERLENGTH = 4 + 12 + 4 + 4;
+    public static long KILO = 1000;
+    public static long MEGA = 1000000;
+    public static long GIGA = 1000000000;
+    public static int HEADERLENGTH = 24;
     public static int COMMANDPOSITION = 4;
     public static int PAYLOADPOSITION = 24;
     public static int LENGTHPOSITION = 16;

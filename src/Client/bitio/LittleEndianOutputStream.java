@@ -307,4 +307,18 @@ public class LittleEndianOutputStream extends FilterOutputStream {
 		});
 		return leis;
 	}
+
+	public static LittleEndianOutputStream wrap(ByteBuffer [] b){
+		LittleEndianOutputStream leos = new LittleEndianOutputStream(new OutputStream() {
+			ByteBuffer [] bb = b;
+			int i = 0;
+			@Override
+			public synchronized void write(int arg0) throws IOException {
+				while(!bb[i].hasRemaining() && i < bb.length - 1)
+					i++;
+				bb[i].put((byte) arg0);
+			}
+		});
+		return leos;
+	}
 }
