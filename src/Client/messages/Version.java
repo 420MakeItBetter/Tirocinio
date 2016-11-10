@@ -22,7 +22,7 @@ public class Version extends Message{
     private boolean relay;
 
     public Version(){
-        setLength(4 + 8 + 8 + 26 + 26 + 8 + 17 + 4 + 1);
+        setLength(4 + 8 + 8 + 26 + 26 + 8 + 19 + 4 + 1);
     }
 
     @Override

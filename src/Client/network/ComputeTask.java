@@ -52,6 +52,8 @@ public class ComputeTask implements Runnable {
                 saveAddressees((Address) m);
             else if(m instanceof Inventory)
                 inventoryStat((Inventory) m);
+            else if(m instanceof GetAddress)
+                sendAddress((GetAddress) m);
         } catch (IOException e)
         {
             e.printStackTrace();
@@ -60,35 +62,14 @@ public class ComputeTask implements Runnable {
             e.printStackTrace();
         }
         catch (NullPointerException e)
-        {
-            e.printStackTrace();
-        }
+        {}
         Main.listener.computeNumber.decrementAndGet();
     }
 
-    private void inventoryStat(Inventory m) {
-        for(InventoryVector v : m.getInventoryVectors())
-            switch (v.getType())
-            {
-                case ERROR:
-                    Main.invStat.error.incrementAndGet();
-                    break;
-                case MSG_TX:
-                    Main.invStat.transiction.incrementAndGet();
-                    break;
-                case MSG_BLOCK:
-                    Main.invStat.block.incrementAndGet();
-                    break;
-                case MSG_CMPCT_BLOCK:
-                    Main.invStat.cmpct_block.incrementAndGet();
-                    break;
-                case MSG_FILTERED_BLOCK:
-                    Main.invStat.filtered_block.incrementAndGet();
-                    break;
-            }
+    private void sendAddress(GetAddress m) {
         try
         {
-            InventoryProtocol.sendInventory(m,skt,p);
+            Connect.sendAddresses(skt,p);
         } catch (IOException e)
         {
             e.printStackTrace();
@@ -96,7 +77,34 @@ public class ComputeTask implements Runnable {
         {
             e.printStackTrace();
         }
+    }
 
+    private void inventoryStat(Inventory m) {
+        for(InventoryVector v : m.getInventoryVectors())
+            try
+            {
+                switch (v.getType())
+                {
+                    case ERROR:
+                        Main.invStat.error.incrementAndGet();
+                        break;
+                    case MSG_TX:
+                        Main.invStat.transiction.incrementAndGet();
+                        break;
+                    case MSG_BLOCK:
+                        Main.invStat.block.incrementAndGet();
+                        break;
+                    case MSG_CMPCT_BLOCK:
+                        Main.invStat.cmpct_block.incrementAndGet();
+                        break;
+                    case MSG_FILTERED_BLOCK:
+                        Main.invStat.filtered_block.incrementAndGet();
+                        break;
+                }
+            }catch (NullPointerException e)
+            {
+                e.printStackTrace();
+            }
     }
 
     private void verackResponse() {

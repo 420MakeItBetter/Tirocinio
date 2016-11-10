@@ -33,9 +33,9 @@ public class VersionTask implements Runnable {
         PeerAddress my = new PeerAddress();
         try
         {
-            my.setAddress(InetAddress.getByName("127.0.0.1"));
+            my.setAddress(InetAddress.getByName("131.114.88.218"));
             my.setPort(BitConstants.PORT);
-            my.setService(0);
+            my.setService(1);
             PeerAddress your = new PeerAddress();
             your.setAddress(p.getAddress());
             your.setPort(p.getPort());
@@ -43,11 +43,11 @@ public class VersionTask implements Runnable {
             Version v = new Version();
             v.setMyAddress(my);
             v.setYourAddress(your);
-            v.setServices(0);
+            v.setServices(1);
             v.setTimestamp(System.currentTimeMillis() / BitConstants.TIME);
             v.setNonce(random.nextLong());
             v.setVersion(BitConstants.VERSION);
-            v.setUserAgent("TestClient.0.0.1");
+            v.setUserAgent("/TestClient.0.0.1/");
             v.setHeight(BitConstants.LASTBLOCK);
             v.setRelay(true);
             p.setPeerState(PeerState.HANDSAKE);

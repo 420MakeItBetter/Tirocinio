@@ -2,11 +2,9 @@ package Client.messages;
 
 import Client.BitConstants;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -24,7 +22,7 @@ public class SerializedMessage {
     private ByteBuffer [] payload;
     private String command;
     private int checksum;
-    private int size;
+    private long size;
 
     public static void initializeBuffers(){
         //creo 4.166.666 bytebuffer per gli header
@@ -35,7 +33,7 @@ public class SerializedMessage {
         }
 
         //creo 6.249.999 bytebuffer di 500 byte per i payload
-        for(long i = 0; i < BitConstants.GIGA+BitConstants.GIGA+BitConstants.GIGA+(BitConstants.MEGA*125); i+=500)
+        for(long i = 0; i < BitConstants.GIGA+(BitConstants.MEGA*125); i+=500)
         {
             payloads.add(ByteBuffer.allocate(500));
             payloadC.incrementAndGet();
@@ -48,10 +46,10 @@ public class SerializedMessage {
         return b;
     }
 
-    public static ByteBuffer [] newPayload(int size) {
-        int l = size/500;
+    public static ByteBuffer [] newPayload(long size) {
+        long l = size/500;
         boolean failed = false;
-        ByteBuffer [] ret = new ByteBuffer [l + 1];
+        ByteBuffer [] ret = new ByteBuffer [(int) (l + 1)];
         int i;
         for(i = 0; i < l; i+=1)
         {
@@ -73,7 +71,7 @@ public class SerializedMessage {
         {
             ret[ret.length - 1] = payloads.poll();
             if(ret[ret.length - 1] == null)
-                for(int j = 0; j < i; j++)
+                for(int j = 0; j < ret.length - 1; j++)
                 {
                     payloadC.incrementAndGet();
                     payloads.add(ret[j]);
@@ -81,7 +79,7 @@ public class SerializedMessage {
             else
             {
                 payloadC.decrementAndGet();
-                ret[ret.length - 1].limit(size - l * 500);
+                ret[ret.length - 1].limit((int) (size - l * 500));
                 return ret;
             }
         }
@@ -135,7 +133,7 @@ public class SerializedMessage {
         this.command = command;
     }
 
-    public void setSize(int size) {
+    public void setSize(long size) {
         this.size = size;
     }
 
@@ -159,7 +157,7 @@ public class SerializedMessage {
         return command;
     }
 
-    public int getSize() {
+    public long getSize() {
         return size;
     }
 
@@ -173,7 +171,7 @@ public class SerializedMessage {
 
     @Override
     public String toString() {
-        return "command: "+command+" size "+size+" checksum "+checksum;
+        return "command: "+command+" size "+size+" checksum "+checksum+" header "+header+" payload "+payload;
     }
 
     public void flipPayload() {

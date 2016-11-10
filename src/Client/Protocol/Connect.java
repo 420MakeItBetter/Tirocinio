@@ -62,9 +62,16 @@ public class Connect {
         }
     }
 
-    public static void sendVersion(Version msg, SocketChannel channel, Peer p) throws IOException, InterruptedException {
+    public static void sendVersion(Version msg, SocketChannel channel, Peer p) throws InterruptedException, ClosedChannelException {
         ByteBuffer header = ProtocolUtil.writeHeader(msg);
-        ByteBuffer[] payload = ProtocolUtil.writePayload(msg);
+        ByteBuffer[] payload = new ByteBuffer[0];
+        try
+        {
+            payload = ProtocolUtil.writePayload(msg);
+        } catch (IOException e)
+        {
+            SerializedMessage.returnHeader(header);
+        }
         header.put(ProtocolUtil.getChecksum(payload));
 
         ProtocolUtil.sendMessage(header,payload,channel,p);
@@ -81,10 +88,14 @@ public class Connect {
     }
 
 
-    public static void sendAddresses(SocketChannel skt, Peer p) throws IOException, InterruptedException {
+    public static void sendAddresses(SocketChannel skt, Peer p) throws InterruptedException, ClosedChannelException {
         Address addr = new Address();
+        int count = 0;
         for(Peer peer : Main.peers.values())
         {
+            count++;
+            if(count == 1000)
+                break;
             PeerAddress pa = new PeerAddress();
             pa.setAddress(peer.getAddress());
             pa.setPort(peer.getPort());
@@ -93,7 +104,14 @@ public class Connect {
             addr.getAddresses().add(pa);
         }
         ByteBuffer header = ProtocolUtil.writeHeader(addr);
-        ByteBuffer[] payload = ProtocolUtil.writePayload(addr);
+        ByteBuffer[] payload = new ByteBuffer[0];
+        try
+        {
+            payload = ProtocolUtil.writePayload(addr);
+        } catch (IOException e)
+        {
+            SerializedMessage.returnHeader(header);
+        }
         header.put(ProtocolUtil.getChecksum(payload));
 
         ProtocolUtil.sendMessage(header,payload,skt,p);

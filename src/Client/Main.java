@@ -115,7 +115,7 @@ public class Main {
         SerializedMessage.initializeBuffers();
         Thread thread = new Thread(listener);
         thread.start();
-        Thread mainThread = new Thread(new MainThread(thread));
+        Thread mainThread = new Thread(new MainThread());
         mainThread.start();
         Thread externalListener = new Thread(new ExternalListener());
         externalListener.start();
@@ -124,9 +124,11 @@ public class Main {
         while(true)
         {
             counter++;
-            if(counter < 500)
+            if(counter < 750)
             {
                 Peer p = newnotConnectedAdressess.poll();
+                if(p == null)
+                    p = oldnotConnectedAdressess.poll();
                 if(p != null)
                     try
                     {
@@ -139,7 +141,7 @@ public class Main {
             }
             else
             {
-                if(counter == 750)
+                if(counter == 1000)
                 {
                     counter = 0;
                     try

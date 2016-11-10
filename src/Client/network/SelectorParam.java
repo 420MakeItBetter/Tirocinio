@@ -24,5 +24,8 @@ public class SelectorParam {
        return channel.register(selector,interest,o);
     }
 
+    public Peer getInterest(){
+        return (Peer) o;
+    }
 
 }

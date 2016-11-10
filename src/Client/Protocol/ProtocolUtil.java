@@ -21,9 +21,16 @@ import java.nio.channels.SocketChannel;
  */
 public class ProtocolUtil {
 
-    public static ByteBuffer[] writePayload(Message m) throws IOException, InterruptedException {
-        ByteBuffer[] payload = SerializedMessage.newBlockingPayload(m.getLength());
-        m.write(LittleEndianOutputStream.wrap(payload));
+    public static ByteBuffer[] writePayload(Message m) throws InterruptedException, IOException {
+        ByteBuffer[] payload = SerializedMessage.newBlockingPayload((int) m.getLength());
+        try
+        {
+            m.write(LittleEndianOutputStream.wrap(payload));
+        } catch (IOException e)
+        {
+            SerializedMessage.returnPayload(payload);
+            throw e;
+        }
         return payload;
     }
 

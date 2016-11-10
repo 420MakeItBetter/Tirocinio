@@ -24,7 +24,7 @@ public class FilterAdd extends Message{
 
     @Override
     public void read(LittleEndianInputStream leis) throws IOException {
-        data = new byte [getLength()];
+        data = new byte [(int) getLength()];
         leis.read(data);
     }
 

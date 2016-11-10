@@ -115,5 +115,11 @@ public class Peer implements Comparable<Peer>{
     public void incrementAttempt() {
         attempt++;
     }
+
+
+    @Override
+    public String toString() {
+        return addr.toString()+" "+port+" "+service+" "+state+"\n"+incompleteMsg+"\n"+pendingMessages;
+    }
 }
 

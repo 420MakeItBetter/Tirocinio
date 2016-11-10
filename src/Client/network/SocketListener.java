@@ -14,6 +14,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.channels.spi.AbstractSelectableChannel;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -31,6 +32,7 @@ public class SocketListener implements Runnable {
     public  AtomicInteger computeNumber;
     public  AtomicInteger readNumber;
     public AtomicInteger versionNumber;
+    public AtomicInteger connected;
 
 
     Selector selector;
@@ -47,6 +49,7 @@ public class SocketListener implements Runnable {
         computeNumber = new AtomicInteger();
         readNumber = new AtomicInteger();
         versionNumber = new AtomicInteger();
+        connected = new AtomicInteger();
         try
         {
             selector = Selector.open();
@@ -101,7 +104,49 @@ public class SocketListener implements Runnable {
                 while(!queue.isEmpty())
                 {
                     SelectorParam param = queue.poll();
-                    param.register(selector);
+                    try
+                    {
+                        param.register(selector);
+                    }catch (ClosedChannelException e)
+                    {
+                        Peer p = param.getInterest();
+                        while(p.hasNoPendingMessage())
+                        {
+                            SerializedMessage m = p.poolMsg();
+                            try
+                            {
+                                SerializedMessage.returnHeader(m.getHeader());
+                            } catch (InterruptedException e1)
+                            {
+                                e1.printStackTrace();
+                            }
+                            try
+                            {
+                                SerializedMessage.returnPayload(m.getPayload());
+                            } catch (InterruptedException e1)
+                            {
+                                e1.printStackTrace();
+                            }
+                        }
+                        SerializedMessage m = p.getMsg();
+                        if(m != null)
+                        {
+                            try
+                            {
+                                SerializedMessage.returnHeader(m.getHeader());
+                            } catch (InterruptedException e1)
+                            {
+                                e1.printStackTrace();
+                            }
+                            try
+                            {
+                                SerializedMessage.returnPayload(m.getPayload());
+                            } catch (InterruptedException e1)
+                            {
+                                e1.printStackTrace();
+                            }
+                        }
+                    }
                 }
                 int count = 0;
                 while(!tasks.isEmpty() && count < 5)
@@ -165,6 +210,7 @@ public class SocketListener implements Runnable {
                 addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
                 return;
             }
+
             if(msg.getPayload() != null)
             {
                 skt.write(msg.getHeader());
@@ -172,8 +218,16 @@ public class SocketListener implements Runnable {
                 if (msg.getPayload()[msg.getPayload().length - 1].position() == msg.getPayload()[msg.getPayload().length - 1].limit())
                 {
                     p.poolMsg();
-                    SerializedMessage.returnHeader(msg.getHeader());
-                    SerializedMessage.returnPayload(msg.getPayload());
+                    try
+                    {
+                        SerializedMessage.returnHeader(msg.getHeader());
+                    } catch (InterruptedException e)
+                    {}
+                    try
+                    {
+                        SerializedMessage.returnPayload(msg.getPayload());
+                    } catch (InterruptedException e)
+                    {}
                 }
                 if (p.hasNoPendingMessage())
                     addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
@@ -184,7 +238,11 @@ public class SocketListener implements Runnable {
                 if (msg.getHeader().position() == msg.getHeader().capacity())
                 {
                     p.poolMsg();
-                    SerializedMessage.returnHeader(msg.getHeader());
+                    try
+                    {
+                        SerializedMessage.returnHeader(msg.getHeader());
+                    } catch (InterruptedException e)
+                    {}
                 }
                 if (p.hasNoPendingMessage())
                     addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
@@ -228,9 +286,8 @@ public class SocketListener implements Runnable {
             p.setPeerState(PeerState.CLOSE);
             p.incrementAttempt();
             Main.oldnotConnectedAdressess.add(p);
-            //e.printStackTrace();
-        } catch (InterruptedException e)
-        {}
+            e.printStackTrace();
+        }
     }
 
     private void read(SelectionKey key) {
@@ -249,15 +306,20 @@ public class SocketListener implements Runnable {
                 return;
             //setto l'header
             msg.setHeader(header);
+        }
+        else
+        {
+            msg = p.getMsg();
+            p.setMsg(null);
+        }
+
+        if(msg.getHeader().position() < msg.getHeader().limit())
+        {
             try
             {
-                long read = skt.read(header);
-                //se il canale e' stato chiuso allora la connessione e' stata chiusa
+                int read = skt.read(msg.getHeader());
                 if(read == -1)
                 {
-
-                    if(Main.showLog)
-                        logger.error("il Peer {} ha chiuso la connessione", skt.getRemoteAddress());
                     //chiudo il socket
                     skt.close();
                     //setto lo stato del peer
@@ -265,16 +327,36 @@ public class SocketListener implements Runnable {
                     //ritorno il buffer preso
                     p.incrementAttempt();
                     Main.oldnotConnectedAdressess.add(p);
-                    SerializedMessage.returnHeader(header);
-
+                    try
+                    {
+                        SerializedMessage.returnHeader(msg.getHeader());
+                    } catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
+                    }
                     return;
                 }
-                header.position(16);
+                if(msg.getHeader().position() < msg.getHeader().limit())
+                {
+                    p.setMsg(msg);
+                    return;
+                }
+                msg.getHeader().position(0);
+                byte [] m = new byte [4];
+                byte [] c = new byte [12];
                 byte [] b = new byte [4];
-                header.get(b);
+                msg.getHeader().get(m);
+                msg.getHeader().get(c);
+                msg.getHeader().get(b);
+                msg.getHeader().position(msg.getHeader().limit());
                 int size = ((b[3] & 0xFF) << 24 | (b[2] & 0xFF) << 16 | (b[1] & 0xFF) << 8 | (b[0] & 0xFF));
+                if(!Arrays.equals(m,BitConstants.MAGIC))
+                    throw new IOException("Peer out of synch "+new String(c).trim());
                 msg.setSize(size);
+                msg.setCommand(new String(c).trim());
                 //se il size del messaggio e' maggiore di 0 devo creare un payload per il messaggio
+                if(size < 0)
+                    System.err.println(size+" "+Integer.reverse(size)+" "+Integer.reverseBytes(size));
                 if(size > 0)
                 {
                     ByteBuffer [] payload = SerializedMessage.newPayload(size);
@@ -293,20 +375,15 @@ public class SocketListener implements Runnable {
                // e.printStackTrace();
                 try
                 {
-                    SerializedMessage.returnHeader(header);
+                    SerializedMessage.returnHeader(msg.getHeader());
                 } catch (InterruptedException e1)
                 {}
                 p.incrementAttempt();
                 p.setPeerState(PeerState.CLOSE);
                 Main.oldnotConnectedAdressess.add(p);
                 return;
-            } catch (InterruptedException e)
-            {}
-        }
-        else
-        {
-            msg = p.getMsg();
-            p.setMsg(null);
+            }
+
         }
         //se il size del messaggio e' maggiore di 0
         if(msg.getSize() > 0)
@@ -325,7 +402,7 @@ public class SocketListener implements Runnable {
             }
             try
             {
-                skt.read(msg.getPayload());
+                long r = skt.read(msg.getPayload());
                 if(msg.getPayload()[msg.getPayload().length - 1].position() < msg.getPayload()[msg.getPayload().length - 1].limit())
                 {
                     p.setMsg(msg);
@@ -348,6 +425,10 @@ public class SocketListener implements Runnable {
                 try
                 {
                     SerializedMessage.returnHeader(msg.getHeader());
+                }catch (InterruptedException e1)
+                {}
+                try
+                {
                     SerializedMessage.returnPayload(msg.getPayload());
                 } catch (InterruptedException e1)
                 {}
@@ -363,6 +444,7 @@ public class SocketListener implements Runnable {
     }
 
     private void accept(SelectionKey key){
+        connected.incrementAndGet();
         ServerSocketChannel server = (ServerSocketChannel) key.channel();
         SocketChannel skt = null;
         try

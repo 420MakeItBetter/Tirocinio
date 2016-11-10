@@ -4,10 +4,8 @@ import Client.messages.SerializedMessage;
 import Client.network.Peer;
 import Client.network.PeerState;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.util.HashMap;
 import java.util.Scanner;
 
 /**
@@ -17,80 +15,78 @@ import java.util.Scanner;
 public class MainThread implements Runnable {
 
 
-    Thread listener;
-
-    MainThread(Thread t){
-        listener = t;
-    }
-
     @Override
     public void run() {
-        Scanner s = new Scanner(System.in);
-        boolean exit = false;
-        long start = System.currentTimeMillis();
-        while(!exit)
-        {
-            String command = s.next();
-            switch (command)
+
+        File f = new File("UserAgentStats");
+        if(!f.exists())
+            try
             {
-                case "exit" :
-                    exit = true;
-                    break;
-                case "uptime" :
-                    long time = System.currentTimeMillis() - start;
-                    System.out.println("Client in esecuzione da: \n"+time/(1000*60*60*24)+"G "+(time%(1000*60*60*24))/(1000*60*60)+"H "+(time%(1000*60*60))/(1000*60) +"m "+((time%(1000*60))/1000)+"s ");
-                    break;
-                case "stat" :
-                    int open = 0;
-                    int handshake = 0;
-                    int close = 0;
-                    for(Peer p : Main.peers.values())
-                        switch (p.getPeerState())
+                f.createNewFile();
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        FileOutputStream out = null;
+        while(!Thread.currentThread().isInterrupted())
+        {
+            try
+            {
+                Thread.sleep(1000*30);
+                out = new FileOutputStream(f);
+                HashMap<String,Integer> map = new HashMap<>();
+                for(String str : Main.userAgents.keySet())
+                {
+                    out.write(str.getBytes());
+                    out.write(": ".getBytes());
+                    out.write(String.valueOf(Main.userAgents.get(str).get()).getBytes());
+                    out.write('\n');
+                    char [] arr = new char [500];
+                    int i = 0;
+                    for(char c : str.toCharArray())
+                    {
+                        if(c == ':')
+                            break;
+                        else
                         {
-                            case OPEN:
-                                open++;
-                                break;
-                            case HANDSAKE:
-                                handshake++;
-                                break;
-                            case CLOSE:
-                                close++;
+                            if(c == '/')
+                                continue;
+                            if(i < 500)
+                            {
+                                arr[i] = c;
+                                i++;
+                            }
+                            else
                                 break;
                         }
-                    System.out.println("Connessioni aperte: "+open+"\nConnessioni in fase di handshake: "+handshake+"\nConnessioni chiuse: "+close+"\nConnessioni totali:"+(open+handshake+close));
-                    break;
-                case "inv" :
-                    System.out.println("Errors:"+Main.invStat.error.get()+"\nTransactions:"+Main.invStat.transiction.get()+"\nBlocks:"+Main.invStat.block.get()+"\nFiltered Block:"+Main.invStat.filtered_block.get()+"\nCMPCT Blocks:"+Main.invStat.cmpct_block.get());
-                    break;
-                case "mem" :
-                    Runtime r = Runtime.getRuntime();
-                    System.out.println("Acceptor:"+Main.listener.acceptNumber.get()+"\nAddressGetter:"+Main.listener.addressGetter.get()+"\nComputeTaks:"+Main.listener.computeNumber.get()+"\nReader:"+Main.listener.readNumber.get()+"\nVersionTasks:"+Main.listener.versionNumber.get()+"\nHeader liberi: "+SerializedMessage.headerC.get()+"\nPayload liberi: "+SerializedMessage.payloadC.get()+"\nMemoria usata:"+((r.maxMemory()-r.freeMemory())/(1024*1024)));
-                    break;
-                case "agent" :
-                    for(String str : Main.userAgents.keySet())
-                    {
-                        System.out.println(str+": "+Main.userAgents.get(str).get());
                     }
-                default:
-                    break;
-
-            }
-        }
-        listener.interrupt();
-        File addresses = new File("./addresses.dat");
-        try {
-            BufferedWriter out = new BufferedWriter(new FileWriter(addresses));
-            System.out.println("scrivo "+Main.peers.size()+" indirizzi");
-            for(Peer p : Main.peers.values())
+                    Integer val = null;
+                    if(map.containsKey(String.valueOf(arr).trim()))
+                        val = map.get(String.valueOf(arr).trim());
+                    else
+                        val = 0;
+                    val+=Main.userAgents.get(str).get();
+                    map.put(String.valueOf(arr).trim(),val);
+                }
+                out.write("------------------------\n".getBytes());
+                for(String s : map.keySet())
+                {
+                    out.write(s.getBytes());
+                    out.write(": ".getBytes());
+                    out.write(String.valueOf(map.get(s)).getBytes());
+                    out.write('\n');
+                }
+            } catch (InterruptedException e)
             {
-                out.write(p.getAddress().getHostAddress()+"\n");
-                out.write(p.getPort()+"\n");
-                out.write(p.getTimestamp()+"\n");
+                e.printStackTrace();
+            } catch (FileNotFoundException e)
+            {
+                e.printStackTrace();
+            } catch (IOException e)
+            {
+                e.printStackTrace();
             }
-            out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
+        }
     }
 }

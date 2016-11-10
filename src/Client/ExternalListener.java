@@ -38,6 +38,11 @@ public class ExternalListener implements Runnable {
                         byte[] buf = new byte[100];
                         while ((b = in.read()) != '\0')
                         {
+                            if(b == -1)
+                            {
+                                exit = true;
+                                break;
+                            }
                             buf[i] = (byte) b;
                             i++;
                         }
@@ -72,7 +77,9 @@ public class ExternalListener implements Runnable {
                                         .append("\nConnessioni chiuse: ")
                                         .append(close)
                                         .append("\nConnessioni totali:")
-                                        .append(open + handshake + close);
+                                        .append(open + handshake + close)
+                                        .append("\nConnessioni richieste in entrata:")
+                                        .append(Main.listener.connected.get());
                                 break;
                             case "inv":
                                 builder.append("Errors: ")

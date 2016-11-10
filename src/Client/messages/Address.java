@@ -24,7 +24,7 @@ public class Address extends Message {
 
 
     @Override
-    public int getLength() {
+    public long getLength() {
         int varint = 1;
         if(addresses.size() < 0xFD)
             varint = 1;

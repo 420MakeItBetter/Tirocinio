@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
 /**
@@ -29,41 +31,58 @@ public class ReadTask implements Runnable{
 
     @Override
     public void run() {
-        byte [] command = new byte [12];
-        msg.getHeader().rewind();
-        if(msg.getPayload() != null)
-            msg.flipPayload();
-        msg.getHeader().position(4);
-        msg.getHeader().get(command);
-        msg.setCommand(new String(command).trim());
-        msg.getHeader().position(20);
-        msg.setChecksum(msg.getHeader().getInt());
-
-        Message m = createMessage(msg);
-        if(m != null)
-        {
-            if(m instanceof UnknownMessage)
-                ((UnknownMessage) m).setCommand(msg.getCommand());
-            ComputeTask task = new ComputeTask(skt, p, m);
-            Main.listener.ex.execute(task);
-        }
         try
         {
-            SerializedMessage.returnHeader(msg.getHeader());
-        } catch (InterruptedException e)
+
+            byte[] command = new byte[12];
+            msg.getHeader().rewind();
+            if (msg.getPayload() != null)
+                msg.flipPayload();
+            msg.getHeader().position(4);
+            msg.getHeader().get(command);
+            msg.setCommand(new String(command).trim());
+            msg.getHeader().position(20);
+            msg.setChecksum(msg.getHeader().getInt());
+
+            Message m = createMessage(msg);
+            if (m != null)
+            {
+                if (m instanceof UnknownMessage)
+                    ((UnknownMessage) m).setCommand(msg.getCommand());
+                ComputeTask task = new ComputeTask(skt, p, m);
+                Main.listener.ex.execute(task);
+            }
+            if(m instanceof Inventory)
+            {
+                msg.getHeader().rewind();
+                msg.flipPayload();
+                p.addMsg(msg);
+                Main.listener.addChannel(skt, SelectionKey.OP_WRITE | SelectionKey.OP_READ, p);
+            }
+        } catch (ClosedChannelException e)
         {
             e.printStackTrace();
-        }
-        if(msg.getPayload() != null)
-            try
+        } finally
+        {
+            Main.listener.readNumber.decrementAndGet();
+            if(!msg.getCommand().equals("inv"))
             {
-                SerializedMessage.returnPayload(msg.getPayload());
-            } catch (InterruptedException e)
-            {
-                e.printStackTrace();
+                try
+                {
+                    SerializedMessage.returnHeader(msg.getHeader());
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+                try
+                {
+                    SerializedMessage.returnPayload(msg.getPayload());
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
             }
-        msg = null;
-        Main.listener.readNumber.decrementAndGet();
+        }
 
     }
 
@@ -156,7 +175,7 @@ public class ReadTask implements Runnable{
             return message;
         } catch (IOException | NullPointerException e)
         {
-            e.printStackTrace();
+            System.err.println(msg+"\n"+p);
         }
 
         return null;

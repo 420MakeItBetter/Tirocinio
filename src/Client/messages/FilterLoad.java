@@ -38,7 +38,7 @@ public class FilterLoad extends Message {
 
     @Override
     public void read(LittleEndianInputStream leis) throws IOException {
-        int length = getLength() - 9;
+        int length = (int) (getLength() - 9);
         filter = new byte [length];
         leis.read(filter);
         nHashFuncs = leis.readInt();

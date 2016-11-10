@@ -76,7 +76,7 @@ public class Reject extends Message {
         byte[] reason = new byte[reason_length];
         leis.read(reason);
         this.reason = String.valueOf(reason);
-        int length = getLength() - (message_length + 1 + reason_length);
+        int length = (int) (getLength() - (message_length + 1 + reason_length));
         if (length > 0)
         {
             data = new byte[length];

@@ -1,10 +1,5 @@
 package Client.messages;
 
-import Client.bitio.LittleEndianInputStream;
-import Client.bitio.LittleEndianOutputStream;
-
-import java.io.IOException;
-
 /**
  * Created by Matteo on 06/10/2016.
  */
@@ -12,13 +7,13 @@ public abstract class Message implements BitSerializable{
 
     public abstract String getCommand();
     private int checksum;
-    private int length;
+    private long length;
 
-    public int getLength(){
+    public long getLength(){
         return length;
     }
 
-    public void setLength(int length){
+    public void setLength(long length){
         this.length = length;
     }
 

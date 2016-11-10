@@ -1,7 +1,6 @@
 package Client.network;
 
 import Client.Main;
-import Client.Test;
 import com.sun.org.apache.bcel.internal.generic.Select;
 
 import java.io.IOException;
@@ -31,11 +30,12 @@ public class AcceptTask implements Runnable{
                 peer = Main.peers.get(skt.socket().getInetAddress().getHostAddress());
             else
             {
-                peer = new Peer(skt.socket().getInetAddress(), skt.socket().getPort());
+                peer = new Peer(skt.socket().getInetAddress(), 8333);
                 Main.peers.put(peer.getAddress().getHostAddress(), peer);
             }
             peer.setPeerState(PeerState.HANDSAKE);
-            Main.listener.addChannel(skt,SelectionKey.OP_READ,peer);
+            VersionTask v = new VersionTask(skt,peer);
+            Main.listener.ex.execute(v);
         } catch (IOException e)
         {
 
