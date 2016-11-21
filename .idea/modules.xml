@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/BitcoinTirocinio.iml" filepath="$PROJECT_DIR$/BitcoinTirocinio.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Commander/Commander.iml" filepath="$PROJECT_DIR$/Commander/Commander.iml" />
     </modules>
   </component>
 </project>

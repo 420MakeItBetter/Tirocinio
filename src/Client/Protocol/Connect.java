@@ -4,6 +4,7 @@ import Client.BitConstants;
 import Client.Main;
 import Client.bitio.LittleEndianOutputStream;
 import Client.messages.*;
+import Client.network.ConnectTask;
 import Client.network.Peer;
 import Client.utils.IOUtils;
 import io.nayuki.bitcoin.crypto.Sha256;
@@ -47,19 +48,9 @@ public class Connect {
         }
     }
 
-    public static void connect(InetAddress address, int port, Peer p) throws IOException {
-        SocketChannel skt = SocketChannel.open();
-        try
-        {
-            skt.configureBlocking(false);
-            skt.connect(new InetSocketAddress(address, port));
-            Main.listener.addChannel(skt, SelectionKey.OP_CONNECT, p);
-        }
-        catch (IOException e)
-        {
-            skt.close();
-            throw e;
-        }
+    public static void connect(InetAddress address, int port, Peer p){
+        ConnectTask t = new ConnectTask(p);
+        Main.listener.ex.execute(t);
     }
 
     public static void sendVersion(Version msg, SocketChannel channel, Peer p) throws InterruptedException, ClosedChannelException {

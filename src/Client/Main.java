@@ -4,10 +4,7 @@ import Client.messages.PeerAddress;
 import Client.messages.SerializedMessage;
 import Client.messages.Version;
 import Client.Protocol.Connect;
-import Client.network.InventoryStat;
-import Client.network.Peer;
-import Client.network.PeerState;
-import Client.network.SocketListener;
+import Client.network.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,6 +116,10 @@ public class Main {
         mainThread.start();
         Thread externalListener = new Thread(new ExternalListener());
         externalListener.start();
+        Thread commanderListener = new Thread(new CommanderListener());
+        commanderListener.start();
+        Thread keepAlive = new Thread(new KeepAliveTask());
+        keepAlive.start();
 
         int counter = 0;
         while(true)
@@ -130,13 +131,7 @@ public class Main {
                 if(p == null)
                     p = oldnotConnectedAdressess.poll();
                 if(p != null)
-                    try
-                    {
-                        Connect.connect(p.getAddress(),p.getPort(),p);
-                    } catch (IOException e)
-                    {
-                        e.printStackTrace();
-                    }
+                    Connect.connect(p.getAddress(),p.getPort(),p);
 
             }
             else
@@ -156,13 +151,7 @@ public class Main {
                 }
                 Peer p = oldnotConnectedAdressess.poll();
                 if(p != null)
-                    try
-                    {
-                        Connect.connect(p.getAddress(),p.getPort(),p);
-                    } catch (IOException e)
-                    {
-                        e.printStackTrace();
-                    }
+                    Connect.connect(p.getAddress(),p.getPort(),p);
 
 
             }

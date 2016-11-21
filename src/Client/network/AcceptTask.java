@@ -4,6 +4,7 @@ import Client.Main;
 import com.sun.org.apache.bcel.internal.generic.Select;
 
 import java.io.IOException;
+import java.net.StandardSocketOptions;
 import java.nio.channels.*;
 
 /**
@@ -24,6 +25,7 @@ public class AcceptTask implements Runnable{
     public void run() {
         try
         {
+            skt.setOption(StandardSocketOptions.SO_REUSEADDR,true);
             skt.configureBlocking(false);
             Peer peer = null;
             if(Main.peers.containsKey(skt.socket().getInetAddress().getHostAddress()))
@@ -34,12 +36,20 @@ public class AcceptTask implements Runnable{
                 Main.peers.put(peer.getAddress().getHostAddress(), peer);
             }
             peer.setPeerState(PeerState.HANDSAKE);
+            peer.setSocket(skt);
             VersionTask v = new VersionTask(skt,peer);
             Main.listener.ex.execute(v);
         } catch (IOException e)
         {
 
-            e.printStackTrace();
+            try
+            {
+                skt.close();
+                System.out.println(Main.listener.openedFiles.decrementAndGet());
+            } catch (IOException e1)
+            {
+                e1.printStackTrace();
+            }
         }
         Main.listener.acceptNumber.decrementAndGet();
     }

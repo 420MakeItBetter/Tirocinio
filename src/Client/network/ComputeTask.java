@@ -107,9 +107,7 @@ public class ComputeTask implements Runnable {
             }
     }
 
-    private void verackResponse() {
-        p.setPeerState(PeerState.OPEN);
-    }
+    private void verackResponse() {p.setPeerState(PeerState.OPEN);}
 
     private void saveAddressees(Address m) throws IOException {
         for(PeerAddress p : m.getAddresses())
@@ -137,6 +135,7 @@ public class ComputeTask implements Runnable {
 
     private void versionResponse(Version m) throws ClosedChannelException, InterruptedException {
         AtomicInteger number = Main.userAgents.get(m.getUserAgent());
+        p.setPeerState(PeerState.OPEN);
         if(number == null)
             number = new AtomicInteger();
         AtomicInteger t = Main.userAgents.put(m.getUserAgent(),number);

@@ -15,13 +15,13 @@ import java.util.List;
 public class GetBlocks extends Message {
 
     private int version;
-    private List<Sha256Hash> hashes;
+    private List<byte []> hashes;
 
     public GetBlocks(){
         hashes = new ArrayList<>();
     }
 
-    public List<Sha256Hash> getHashes() {
+    public List<byte []> getHashes() {
         return hashes;
     }
 
@@ -42,8 +42,7 @@ public class GetBlocks extends Message {
         {
             byte [] b = new byte [Sha256Hash.HASH_LENGTH];
             leis.read(b);
-            Sha256Hash hash = new Sha256Hash(b);
-            hashes.add(hash);
+            hashes.add(b);
         }
     }
 
@@ -51,9 +50,9 @@ public class GetBlocks extends Message {
     public void write(LittleEndianOutputStream leos) throws IOException {
         leos.writeInt(version);
         leos.writeVariableSize(hashes.size());
-        for(Sha256Hash hash : hashes)
+        for(byte [] hash : hashes)
         {
-            leos.write(hash.toBytes());
+            leos.write(hash);
         }
     }
 }

@@ -8,6 +8,9 @@ import Client.messages.SerializedMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -34,13 +37,21 @@ public class SocketListener implements Runnable {
     public AtomicInteger versionNumber;
     public AtomicInteger connected;
 
+    public AtomicInteger openedFiles;
+
 
     Selector selector;
     ConcurrentLinkedQueue<SelectorParam> queue;
-    Executor ex;
+    public Executor ex;
     ConcurrentLinkedQueue<Runnable> tasks;
     Logger logger;
 
+    long wbytes;
+    long rbytes;
+    long connections;
+    long dropped;
+    long lastTime;
+    FileOutputStream out;
 
     public SocketListener(){
         logger = LoggerFactory.getLogger(SocketListener.class);
@@ -50,16 +61,40 @@ public class SocketListener implements Runnable {
         readNumber = new AtomicInteger();
         versionNumber = new AtomicInteger();
         connected = new AtomicInteger();
+
+        openedFiles = new AtomicInteger();
+
+        connections = 0;
+        wbytes = 0;
+        rbytes = 0;
+        dropped = 0;
+        File f = new File("nioStat");
+        if(!f.exists())
+            try
+            {
+                f.createNewFile();
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        try
+        {
+            out = new FileOutputStream(f);
+        } catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
         try
         {
             selector = Selector.open();
             queue = new ConcurrentLinkedQueue<>();
             ServerSocketChannel skt = ServerSocketChannel.open();
             skt.configureBlocking(false);
-            skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
+            skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),8333));
             skt.register(selector,SelectionKey.OP_ACCEPT);
             ex = Executors.newCachedThreadPool();
             tasks = new ConcurrentLinkedQueue<>();
+            System.out.println("Socket creato");
         } catch (IOException e)
         {
             e.printStackTrace();
@@ -76,6 +111,7 @@ public class SocketListener implements Runnable {
     @Override
     public void run() {
 
+        lastTime = System.currentTimeMillis();
         while (!Thread.currentThread().isInterrupted())
         {
             try
@@ -88,17 +124,56 @@ public class SocketListener implements Runnable {
                     {
                         accept(key);
                     }
-                    if(key.isConnectable())
-                    {
-                        connect(key);
-                    }
                     else if(key.isReadable())
                     {
-                        read(key);
+                        try
+                        {
+                            read(key);
+                        }
+                        catch(IOException e)
+                        {
+                            SocketChannel skt = (SocketChannel) key.channel();
+                            dropped++;
+                            Main.listener.openedFiles.decrementAndGet();
+                            try
+                            {
+                                skt.close();
+                            } catch (IOException e1)
+                            {
+                                e1.printStackTrace();
+                            }
+                            Peer p = (Peer) key.attachment();
+                            p.incrementAttempt();
+                            p.setVersion(false);
+                            p.setPeerState(PeerState.CLOSE);
+                            Main.oldnotConnectedAdressess.add(p);
+                            key.cancel();
+                        }
                     }
                     else if(key.isWritable())
                     {
-                        write(key);
+                        try
+                        {
+                            write(key);
+                        }catch (IOException e)
+                        {
+                            dropped++;
+                            Main.listener.openedFiles.decrementAndGet();
+                            SocketChannel skt = (SocketChannel) key.channel();
+                            try
+                            {
+                                skt.close();
+                            } catch (IOException e1)
+                            {
+                                e1.printStackTrace();
+                            }
+                            Peer p = (Peer) key.attachment();
+                            p.setPeerState(PeerState.CLOSE);
+                            p.incrementAttempt();
+                            p.setVersion(false);
+                            Main.oldnotConnectedAdressess.add(p);
+                            key.cancel();
+                        }
                     }
                 }
                 while(!queue.isEmpty())
@@ -154,6 +229,15 @@ public class SocketListener implements Runnable {
                     Runnable r = tasks.poll();
                     ex.execute(r);
                 }
+                if(System.currentTimeMillis() - lastTime > 1000*60)
+                {
+                    ex.execute(new Stat(connections,dropped,wbytes,rbytes));
+                    connections = 0;
+                    dropped = 0;
+                    wbytes = 0;
+                    rbytes = 0;
+                    lastTime = System.currentTimeMillis();
+                }
 
             } catch (IOException e)
             {
@@ -173,35 +257,10 @@ public class SocketListener implements Runnable {
 
     }
 
-    private void connect(SelectionKey key) {
-        SocketChannel skt = (SocketChannel) key.channel();
-        try
-        {
-            if(skt.finishConnect())
-            {
-                Connect.connections.incrementAndGet();
-                VersionTask task = new VersionTask(skt, (Peer) key.attachment());
-                ex.execute(task);
-                addChannel(skt, 0, null);
-            }
-        } catch (IOException e)
-        {
-            try
-            {
-                Peer p = (Peer) key.attachment();
-                p.incrementAttempt();
-                Main.oldnotConnectedAdressess.add(p);
-                skt.close();
-            } catch (IOException e1)
-            {
-                e1.printStackTrace();
-            }
-        }
-    }
-
-    private void write(SelectionKey key) {
+    private void write(SelectionKey key) throws IOException {
         SocketChannel skt = (SocketChannel) key.channel();
         Peer p = (Peer) key.attachment();
+        p.setTime();
         SerializedMessage msg = p.peekMsg();
         try
         {
@@ -213,8 +272,8 @@ public class SocketListener implements Runnable {
 
             if(msg.getPayload() != null)
             {
-                skt.write(msg.getHeader());
-                skt.write(msg.getPayload());
+                wbytes+=skt.write(msg.getHeader());
+                wbytes+=skt.write(msg.getPayload());
                 if (msg.getPayload()[msg.getPayload().length - 1].position() == msg.getPayload()[msg.getPayload().length - 1].limit())
                 {
                     p.poolMsg();
@@ -234,7 +293,7 @@ public class SocketListener implements Runnable {
             }
             else
             {
-                skt.write(msg.getHeader());
+                wbytes+=skt.write(msg.getHeader());
                 if (msg.getHeader().position() == msg.getHeader().capacity())
                 {
                     p.poolMsg();
@@ -255,17 +314,13 @@ public class SocketListener implements Runnable {
                 try
                 {
                     SerializedMessage.returnHeader(m.getHeader());
-                } catch (InterruptedException e1)
-                {
-                    e1.printStackTrace();
-                }
+                } catch (InterruptedException ignored)
+                {}
                 try
                 {
                     SerializedMessage.returnPayload(m.getPayload());
-                } catch (InterruptedException e1)
-                {
-                    e1.printStackTrace();
-                }
+                } catch (InterruptedException ignored)
+                {}
             }
             SerializedMessage m = p.getMsg();
             if(m != null)
@@ -273,26 +328,22 @@ public class SocketListener implements Runnable {
                     try
                     {
                         SerializedMessage.returnHeader(m.getHeader());
-                    } catch (InterruptedException e1)
-                    {
-                    }
+                    } catch (InterruptedException ignored)
+                    {}
                     try
                     {
                         SerializedMessage.returnPayload(m.getPayload());
-                    } catch (InterruptedException e1)
-                    {
-                    }
+                    } catch (InterruptedException ignored)
+                    {}
             }
-            p.setPeerState(PeerState.CLOSE);
-            p.incrementAttempt();
-            Main.oldnotConnectedAdressess.add(p);
-            e.printStackTrace();
+            throw e;
         }
     }
 
-    private void read(SelectionKey key) {
+    private void read(SelectionKey key) throws IOException {
         SocketChannel skt = (SocketChannel) key.channel();
         Peer p = (Peer) key.attachment();
+        p.setTime();
         SerializedMessage msg = null;
         //non ho iniziato a leggere il nuovo messaggio
         if(p.getMsg() == null)
@@ -336,6 +387,7 @@ public class SocketListener implements Runnable {
                     }
                     return;
                 }
+                rbytes+=read;
                 if(msg.getHeader().position() < msg.getHeader().limit())
                 {
                     p.setMsg(msg);
@@ -373,15 +425,13 @@ public class SocketListener implements Runnable {
             } catch (IOException e)
             {
                // e.printStackTrace();
+
                 try
                 {
                     SerializedMessage.returnHeader(msg.getHeader());
-                } catch (InterruptedException e1)
+                } catch (InterruptedException ignored)
                 {}
-                p.incrementAttempt();
-                p.setPeerState(PeerState.CLOSE);
-                Main.oldnotConnectedAdressess.add(p);
-                return;
+                throw e;
             }
 
         }
@@ -402,7 +452,7 @@ public class SocketListener implements Runnable {
             }
             try
             {
-                long r = skt.read(msg.getPayload());
+                rbytes+=skt.read(msg.getPayload());
                 if(msg.getPayload()[msg.getPayload().length - 1].position() < msg.getPayload()[msg.getPayload().length - 1].limit())
                 {
                     p.setMsg(msg);
@@ -415,25 +465,15 @@ public class SocketListener implements Runnable {
             {
                 try
                 {
-                    skt.close();
-                } catch (IOException e1)
-                {
-                    e1.printStackTrace();
-                }
-                p.incrementAttempt();
-                p.setPeerState(PeerState.CLOSE);
-                try
-                {
                     SerializedMessage.returnHeader(msg.getHeader());
-                }catch (InterruptedException e1)
+                }catch (InterruptedException ignored)
                 {}
                 try
                 {
                     SerializedMessage.returnPayload(msg.getPayload());
-                } catch (InterruptedException e1)
+                } catch (InterruptedException ignored)
                 {}
-                Main.oldnotConnectedAdressess.add(p);
-                //e.printStackTrace();
+                throw e;
             }
         }
         else
@@ -450,10 +490,19 @@ public class SocketListener implements Runnable {
         try
         {
             skt = server.accept();
+            connections++;
+            System.out.println(Main.listener.openedFiles.incrementAndGet());
             AcceptTask task = new AcceptTask(skt);
             ex.execute(task);
         } catch (IOException e)
         {
+            try
+            {
+                skt.close();
+            } catch (IOException e1)
+            {
+                e1.printStackTrace();
+            }
             e.printStackTrace();
         }
 
@@ -461,5 +510,33 @@ public class SocketListener implements Runnable {
     }
 
 
+    private class Stat implements Runnable {
 
+        long con;
+        long drop;
+        long wb;
+        long rb;
+
+        Stat(long c,long d,long w,long r){
+            con = c;
+            drop = d;
+            wb = w;
+            rb = r;
+        }
+
+
+        @Override
+        public void run() {
+            try
+            {
+                out.write(("Nuove Connessioni: "+con+"\n").getBytes());
+                out.write(("Connessioni cadute: "+drop+"\n").getBytes());
+                out.write(("Byte Scritti: "+wb+"\n").getBytes());
+                out.write(("Byte Letti: "+rb+"\n\n").getBytes());
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
 }

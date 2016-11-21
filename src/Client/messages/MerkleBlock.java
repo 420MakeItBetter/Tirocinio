@@ -20,7 +20,7 @@ public class MerkleBlock extends Message {
     private int bits;
     private int nonce;
     private int totaltransaction;
-    private List<Sha256Hash> hashes;
+    private List<byte []> hashes;
     private byte [] flags;
 
     public MerkleBlock(){
@@ -63,7 +63,7 @@ public class MerkleBlock extends Message {
         this.totaltransaction = totaltransaction;
     }
 
-    public List<Sha256Hash> getHashes() {
+    public List<byte []> getHashes() {
         return hashes;
     }
 
@@ -95,8 +95,7 @@ public class MerkleBlock extends Message {
         {
             byte [] hash = new byte [32];
             leis.read(hash);
-            Sha256Hash hash1 = new Sha256Hash(hash);
-            hashes.add(hash1);
+            hashes.add(hash);
         }
         int len = (int) leis.readVariableSize();
         flags = new byte [len];
@@ -116,8 +115,8 @@ public class MerkleBlock extends Message {
          Da capire meglio cosa e' uint256[]
          */
         leos.writeVariableSize(hashes.size());
-        for(Sha256Hash hash : hashes)
-            leos.write(hash.toBytes());
+        for(byte [] hash : hashes)
+            leos.write(hash);
         leos.writeVariableSize(flags.length);
         leos.write(flags);
     }

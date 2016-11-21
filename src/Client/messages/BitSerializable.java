@@ -4,6 +4,7 @@ import Client.bitio.LittleEndianInputStream;
 import Client.bitio.LittleEndianOutputStream;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 /**
  * This is an interface that all the structures that can be serialized as Bitcoin Protocol structures need to implements
@@ -11,7 +12,7 @@ import java.io.IOException;
  * @author Matteo Franceschi
  *
  */
-public interface BitSerializable {
+public interface BitSerializable extends Serializable {
 
     /**
      * read the structure from the {@link LittleEndianInputStream} passed as argument

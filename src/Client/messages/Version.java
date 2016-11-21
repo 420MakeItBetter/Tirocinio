@@ -32,6 +32,8 @@ public class Version extends Message{
 
     public void setVersion(int v){
         version = v;
+        if(version < 70001)
+            setLength(4 + 8 + 8 + 26 + 26 + 8 + 19 + 4);
     }
 
     public void setServices(long s){
@@ -90,7 +92,8 @@ public class Version extends Message{
         nonce = leis.readLong();
         userAgent = leis.readString();
         height = leis.readInt();
-        relay = leis.readBoolean();
+        if(version >= 70001)
+            relay = leis.readBoolean();
     }
 
     @Override
@@ -103,7 +106,8 @@ public class Version extends Message{
         leos.writeLong(nonce);
         leos.writeString(userAgent);
         leos.writeInt(height);
-        leos.writeBoolean(relay);
+        if(this.version >= 70001)
+            leos.writeBoolean(relay);
     }
 
     @Override

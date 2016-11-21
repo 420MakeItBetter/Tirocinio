@@ -7,6 +7,7 @@ import Client.messages.SerializedMessage;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -23,17 +24,40 @@ public class Peer implements Comparable<Peer>{
     private int port;
     private int timestamp;
     private long service;
+    private boolean oldVersion;
+    private long lastMessage;
     private ConcurrentLinkedQueue<SerializedMessage> pendingMessages;
     private SerializedMessage incompleteMsg;
     private PeerState state;
+    private SocketChannel skt;
+    private int tests;
 
     public Peer(InetAddress addr,int port){
         attempt = 0;
+        tests = 0;
+        oldVersion = false;
         pendingMessages = new ConcurrentLinkedQueue<>();
         this.addr = addr;
         this.port = port;
         state = PeerState.CLOSE;
+        skt = null;
         incompleteMsg = null;
+    }
+
+    public void setTime(){
+        lastMessage = System.currentTimeMillis();
+    }
+
+    public long getTime(){
+        return lastMessage;
+    }
+
+    public void setSocket(SocketChannel skt){
+        this.skt = skt;
+    }
+
+    public SocketChannel getSocket(){
+        return skt;
     }
 
     public SerializedMessage getMsg() {
@@ -120,6 +144,22 @@ public class Peer implements Comparable<Peer>{
     @Override
     public String toString() {
         return addr.toString()+" "+port+" "+service+" "+state+"\n"+incompleteMsg+"\n"+pendingMessages;
+    }
+
+    public void incrementTests() {
+        tests++;
+    }
+
+    public int getTests() {
+        return tests;
+    }
+
+    public boolean getVersion() {
+        return oldVersion;
+    }
+
+    public void setVersion(boolean version) {
+        this.oldVersion = version;
     }
 }
 
