@@ -33,6 +33,7 @@ public class Connect {
 
     public static final AtomicInteger connections = new AtomicInteger();
 
+    /*
     public static void connect(InetAddress address,Peer p) throws IOException {
         SocketChannel skt = SocketChannel.open();
         try
@@ -47,6 +48,7 @@ public class Connect {
             throw e;
         }
     }
+    */
 
     public static void connect(InetAddress address, int port, Peer p){
         ConnectTask t = new ConnectTask(p);

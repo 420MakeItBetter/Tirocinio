@@ -28,9 +28,9 @@ public class KeepAliveTask implements Runnable {
                 {
                     if(System.currentTimeMillis() - p.getTime() > 1000*60*5)
                     {
-                        if(!p.getVersion())
+                        if(p.getVersion())
                         {
-                            p.setVersion(true);
+                            p.setVersion(false);
                             p.setPeerState(PeerState.CLOSE);
                             VersionTask t = new VersionTask(p.getSocket(),p);
                             Main.listener.ex.execute(t);
@@ -45,7 +45,7 @@ public class KeepAliveTask implements Runnable {
                                 e.printStackTrace();
                             }
                             p.setPeerState(PeerState.CLOSE);
-                            p.setVersion(false);
+                            p.setVersion(true);
                             p.incrementAttempt();
                             Main.oldnotConnectedAdressess.add(p);
                         }

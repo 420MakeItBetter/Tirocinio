@@ -33,7 +33,7 @@ public class ConnectTask implements Runnable {
         {
             try
             {
-                Main.listener.openedFiles.decrementAndGet();
+                System.out.println(Main.listener.openedFiles.decrementAndGet());
                 skt.close();
             } catch (IOException e1)
             {
@@ -62,7 +62,7 @@ public class ConnectTask implements Runnable {
             Main.oldnotConnectedAdressess.add(p);
             try
             {
-                Main.listener.openedFiles.decrementAndGet();
+                System.out.println(Main.listener.openedFiles.decrementAndGet());
                 skt.close();
             } catch (IOException e1)
             {

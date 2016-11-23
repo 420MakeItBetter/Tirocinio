@@ -1,6 +1,7 @@
 package Client.network;
 
 import Client.BitConstants;
+import Client.CommanderListener;
 import Client.Main;
 import Client.Protocol.Connect;
 import Client.Protocol.InventoryProtocol;
@@ -40,6 +41,10 @@ public class ComputeTask implements Runnable {
         try
         {
             p.setTimestamp((int) (System.currentTimeMillis()/BitConstants.TIME));
+            if(p == Main.followed)
+            {
+                Main.commandListener.messages.add(m.toString());
+            }
             if(Main.showLog)
                 logger.info("Messaggio ricevuto {} da {}",m.getCommand(),p.getAddress());
             if(m instanceof VerAck)
@@ -150,6 +155,7 @@ public class ComputeTask implements Runnable {
         p.setService(m.getService());
         p.setTimestamp((int) (System.currentTimeMillis() / BitConstants.TIME));
         p.setPort(m.getYourAddress().getPort());
+        p.setAgent(m.getUserAgent());
         Connect.sendVerAck(ack,skt,p);
         Runnable r = new AddressGetter(skt,p);
         Main.listener.tasks.add(r);

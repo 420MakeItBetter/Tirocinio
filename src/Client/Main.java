@@ -28,6 +28,8 @@ public class Main {
 
     public static boolean showLog=false;
 
+    public static Peer followed = null;
+
     public static Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static SocketListener listener = new SocketListener();
@@ -39,6 +41,8 @@ public class Main {
     public static ConcurrentHashMap<String, Peer> peers = new ConcurrentHashMap<>();
 
     public static InventoryStat invStat = new InventoryStat();
+
+    public static CommanderListener commandListener = new CommanderListener();
 
     public static void main(String [] args) {
 
@@ -116,7 +120,7 @@ public class Main {
         mainThread.start();
         Thread externalListener = new Thread(new ExternalListener());
         externalListener.start();
-        Thread commanderListener = new Thread(new CommanderListener());
+        Thread commanderListener = new Thread(commandListener);
         commanderListener.start();
         Thread keepAlive = new Thread(new KeepAliveTask());
         keepAlive.start();

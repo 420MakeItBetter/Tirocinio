@@ -24,24 +24,33 @@ public class Peer implements Comparable<Peer>{
     private int port;
     private int timestamp;
     private long service;
-    private boolean oldVersion;
+    private boolean newVersion;
     private long lastMessage;
     private ConcurrentLinkedQueue<SerializedMessage> pendingMessages;
     private SerializedMessage incompleteMsg;
     private PeerState state;
     private SocketChannel skt;
     private int tests;
+    private String agent;
 
     public Peer(InetAddress addr,int port){
         attempt = 0;
         tests = 0;
-        oldVersion = false;
+        newVersion = true;
         pendingMessages = new ConcurrentLinkedQueue<>();
         this.addr = addr;
         this.port = port;
         state = PeerState.CLOSE;
         skt = null;
         incompleteMsg = null;
+    }
+
+    public void setAgent(String s){
+        agent = s;
+    }
+
+    public String getAgent(){
+        return agent;
     }
 
     public void setTime(){
@@ -155,11 +164,11 @@ public class Peer implements Comparable<Peer>{
     }
 
     public boolean getVersion() {
-        return oldVersion;
+        return newVersion;
     }
 
     public void setVersion(boolean version) {
-        this.oldVersion = version;
+        this.newVersion = version;
     }
 }
 

@@ -9,32 +9,42 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by Matteo on 14/11/2016.
  */
 public class CommanderListener implements Runnable {
 
+    public BlockingQueue<String> messages;
 
     @Override
     public void run() {
+        messages = new LinkedBlockingQueue<>();
         try (ServerSocket skt = new ServerSocket(4201))
         {
-            while(true)
-            {
-                Socket s = skt.accept();
-                Thread t = new Thread(new CommandExecutor(s));
-                t.start();
+            try(ServerSocket skt1 = new ServerSocket(5000)) {
+                while (true) {
+                    Socket s = skt.accept();
+                    Socket s1 = skt1.accept();
+                    new Thread(new CommandExecutor(s)).start();
+                    new Thread(new MessageSender(s1)).start();
+                }
             }
         } catch (IOException e)
         {
             e.printStackTrace();
         }
     }
+
+
 
     private class CommandExecutor implements Runnable {
 
@@ -46,16 +56,10 @@ public class CommanderListener implements Runnable {
 
         @Override
         public void run() {
-
-            List<InetAddress> peers = new LinkedList<>();
-            for(Peer p : Main.peers.values())
-                if(p.getState() == PeerState.OPEN)
-                    peers.add(p.getAddress());
             try
             {
                 ObjectOutputStream out = new ObjectOutputStream(skt.getOutputStream());
                 ObjectInputStream in = new ObjectInputStream(skt.getInputStream());
-                out.writeObject(peers);
                 Command command = null;
                 while(true)
                 {
@@ -72,7 +76,6 @@ public class CommanderListener implements Runnable {
                 }
             } catch (IOException e)
             {
-                e.printStackTrace();
             }
             try
             {
@@ -80,6 +83,34 @@ public class CommanderListener implements Runnable {
             } catch (IOException e)
             {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    private class MessageSender implements Runnable {
+
+        Socket skt;
+
+        MessageSender(Socket s){
+            this.skt = s;
+        }
+
+        @Override
+        public void run() {
+            ObjectOutputStream out = null;
+            try {
+                out = new ObjectOutputStream(skt.getOutputStream());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            while(true){
+                try {
+                   String str = messages.take();
+                    out.writeUnshared(str);
+                } catch (InterruptedException e) {
+                } catch (IOException e) {
+                    break;
+                }
             }
         }
     }

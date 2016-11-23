@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.Random;
 
 /**
  * Created by Matteo on 11/10/2016.
@@ -18,6 +19,7 @@ import java.nio.channels.SocketChannel;
  */
 public class ReadTask implements Runnable{
 
+    private static Random r = new Random();
     private SocketChannel skt;
     private Peer p;
     private SerializedMessage msg;
@@ -53,12 +55,30 @@ public class ReadTask implements Runnable{
                 Main.listener.ex.execute(task);
             }
             if(m instanceof Inventory)
-            {
-                msg.getHeader().rewind();
-                msg.flipPayload();
-                p.addMsg(msg);
-                Main.listener.addChannel(skt, SelectionKey.OP_WRITE | SelectionKey.OP_READ, p);
-            }
+                if(r.nextInt(100) > 60)
+                {
+                    msg.getHeader().rewind();
+                    msg.flipPayload();
+                    p.addMsg(msg);
+                    Main.listener.addChannel(skt, SelectionKey.OP_WRITE | SelectionKey.OP_READ, p);
+                }
+                else
+                {
+                    try
+                    {
+                        SerializedMessage.returnHeader(msg.getHeader());
+                    } catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
+                    }
+                    try
+                    {
+                        SerializedMessage.returnPayload(msg.getPayload());
+                    } catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
         } catch (ClosedChannelException e)
         {
             e.printStackTrace();

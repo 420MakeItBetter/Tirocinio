@@ -46,7 +46,7 @@ public class VersionTask implements Runnable {
             v.setServices(1);
             v.setTimestamp(System.currentTimeMillis() / BitConstants.TIME);
             v.setNonce(random.nextLong());
-            if(!p.getVersion())
+            if(p.getVersion())
                 v.setVersion(BitConstants.VERSION);
             else
                 v.setVersion(60001);

@@ -17,11 +17,11 @@ public class Update extends Command {
 
     @Override
     public void execute(ObjectOutputStream out) {
-        List<InetAddress> peers = new LinkedList<>();
+        List<String> peers = new LinkedList<>();
 
         for(Peer p : Main.peers.values())
             if(p.getState() == PeerState.OPEN)
-                peers.add(p.getAddress());
+                peers.add(p.getAddress().getHostAddress()+"/"+p.getAgent());
         try
         {
             out.writeUnshared(peers);
