@@ -4,10 +4,7 @@ import Client.commands.Command;
 import Client.commands.Exit;
 import Client.commands.Send;
 import Client.commands.Update;
-import Client.messages.GetAddress;
-import Client.messages.GetData;
-import Client.messages.Message;
-import Client.messages.Ping;
+import Client.messages.*;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -17,10 +14,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.channels.SocketChannel;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -35,8 +29,12 @@ public class Main implements Runnable {
     public static ObjectOutputStream out;
     public static Executor ex;
 
+    public static Map<PeerAddress, InetAddress> addressSent;
+
+
     public static void main(String [] args) throws IOException, ClassNotFoundException {
         skt = new Socket();
+        addressSent = new HashMap<>();
         commands = new LinkedBlockingQueue<>();
         SwingUtilities.invokeLater(new Main());
         ex = Executors.newCachedThreadPool();

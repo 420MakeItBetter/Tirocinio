@@ -130,7 +130,7 @@ public class SocketListener implements Runnable {
                         {
                             read(key);
                         }
-                        catch(IOException e)
+                        catch(Exception e)
                         {
                             SocketChannel skt = (SocketChannel) key.channel();
                             dropped++;
@@ -155,7 +155,7 @@ public class SocketListener implements Runnable {
                         try
                         {
                             write(key);
-                        }catch (IOException e)
+                        }catch (Exception e)
                         {
                             dropped++;
                             Main.listener.openedFiles.decrementAndGet();
@@ -239,7 +239,7 @@ public class SocketListener implements Runnable {
                     lastTime = System.currentTimeMillis();
                 }
 
-            } catch (IOException e)
+            } catch (Exception e)
             {
                 e.printStackTrace();
             }
@@ -306,7 +306,7 @@ public class SocketListener implements Runnable {
                 if (p.hasNoPendingMessage())
                     addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
             }
-        } catch (IOException e)
+        } catch (Exception e)
         {
             while(!p.hasNoPendingMessage())
             {
@@ -422,7 +422,7 @@ public class SocketListener implements Runnable {
                     }
                     msg.setPayload(payload);
                 }
-            } catch (IOException e)
+            } catch (Exception e)
             {
                // e.printStackTrace();
 
@@ -461,7 +461,7 @@ public class SocketListener implements Runnable {
 
                 ReadTask task = new ReadTask(skt,p,msg);
                 ex.execute(task);
-            } catch (IOException e)
+            } catch (Exception e)
             {
                 try
                 {
@@ -494,7 +494,7 @@ public class SocketListener implements Runnable {
             System.out.println(Main.listener.openedFiles.incrementAndGet());
             AcceptTask task = new AcceptTask(skt);
             ex.execute(task);
-        } catch (IOException e)
+        } catch (Exception e)
         {
             try
             {

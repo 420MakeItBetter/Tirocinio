@@ -15,12 +15,12 @@ import java.net.Socket;
  */
 public class MainGui extends JFrame implements Runnable, WindowListener {
 
-    public MainGui(Socket s){
+    public MainGui(Socket s,Socket s1){
         setSize(1000,1000);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(true);
         PeerLister right = new PeerLister();
-        MessageLister center = new MessageLister(s);
+        MessageLister center = new MessageLister(s,s1);
 
         setLayout(new BorderLayout());
         addWindowListener(this);

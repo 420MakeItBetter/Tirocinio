@@ -1,6 +1,7 @@
 package Client.network;
 
 import Client.Main;
+import Client.Protocol.Connect;
 import Client.Protocol.KeepAlive;
 
 import java.io.IOException;
@@ -62,6 +63,13 @@ public class KeepAliveTask implements Runnable {
                         {
                             e.printStackTrace();
                         }
+                    }
+                    try
+                    {
+                        Connect.sendGetAddress(p.getSocket(),p);
+                    } catch (ClosedChannelException | InterruptedException e)
+                    {
+                        e.printStackTrace();
                     }
                 }
             }

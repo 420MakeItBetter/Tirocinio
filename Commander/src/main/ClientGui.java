@@ -38,9 +38,11 @@ public class ClientGui extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
             Socket s = new Socket();
+            Socket s1 = new Socket();
         try {
             Main.skt.connect(new InetSocketAddress(InetAddress.getByName(text.getText()),4201));
             s.connect(new InetSocketAddress(InetAddress.getByName(text.getText()),5000));
+            s1.connect(new InetSocketAddress(InetAddress.getByName(text.getText()),5001));
             Main.in = new ObjectInputStream(Main.skt.getInputStream());
             Main.out = new ObjectOutputStream(Main.skt.getOutputStream());
         } catch (IOException e1) {
@@ -55,9 +57,16 @@ public class ClientGui extends JFrame implements ActionListener {
             } catch (IOException e2) {
                 e2.printStackTrace();
             }
+            try
+            {
+                s1.close();
+            } catch (IOException e2)
+            {
+                e2.printStackTrace();
+            }
             Main.skt = new Socket();
             return;
         }
-        SwingUtilities.invokeLater(new MainGui(s));
+        SwingUtilities.invokeLater(new MainGui(s,s1));
     }
 }

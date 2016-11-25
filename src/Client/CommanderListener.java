@@ -1,7 +1,10 @@
 package Client;
 
+import Client.commands.AddrStruct;
 import Client.commands.Command;
 import Client.commands.Exit;
+import Client.messages.Address;
+import Client.network.AddressData;
 import Client.network.Peer;
 import Client.network.PeerState;
 
@@ -25,17 +28,27 @@ public class CommanderListener implements Runnable {
 
     public BlockingQueue<String> messages;
 
+    public BlockingQueue<AddressData> addressess;
+
     @Override
     public void run() {
         messages = new LinkedBlockingQueue<>();
+        addressess = new LinkedBlockingQueue<>();
         try (ServerSocket skt = new ServerSocket(4201))
         {
-            try(ServerSocket skt1 = new ServerSocket(5000)) {
-                while (true) {
-                    Socket s = skt.accept();
-                    Socket s1 = skt1.accept();
-                    new Thread(new CommandExecutor(s)).start();
-                    new Thread(new MessageSender(s1)).start();
+            try(ServerSocket skt1 = new ServerSocket(5000))
+            {
+                try (ServerSocket skt2 = new ServerSocket(5001))
+                {
+                    while (true)
+                    {
+                        Socket s = skt.accept();
+                        Socket s1 = skt1.accept();
+                        Socket s2 = skt2.accept();
+                        new Thread(new CommandExecutor(s)).start();
+                        new Thread(new MessageSender(s1)).start();
+                        new Thread(new AddressSender(s2)).start();
+                    }
                 }
             }
         } catch (IOException e)
@@ -72,6 +85,7 @@ public class CommanderListener implements Runnable {
                     }
                     if(command instanceof Exit)
                         break;
+                    System.out.println("Eseguo comando");
                     command.execute(out);
                 }
             } catch (IOException e)
@@ -84,6 +98,7 @@ public class CommanderListener implements Runnable {
             {
                 e.printStackTrace();
             }
+            Main.followed = null;
         }
     }
 
@@ -107,8 +122,44 @@ public class CommanderListener implements Runnable {
                 try {
                    String str = messages.take();
                     out.writeUnshared(str);
+                    System.out.println("Scrivo messaggio");
                 } catch (InterruptedException e) {
                 } catch (IOException e) {
+                    break;
+                }
+            }
+        }
+    }
+
+    private class AddressSender implements Runnable{
+
+        Socket skt;
+
+        AddressSender(Socket s){
+            this.skt = s;
+        }
+
+        @Override
+        public void run() {
+            ObjectOutputStream out = null;
+            try
+            {
+                out = new ObjectOutputStream(skt.getOutputStream());
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+            while(true)
+            {
+                try
+                {
+                    AddressData addr = addressess.take();
+                    out.writeUnshared(addr.m);
+                    out.writeUnshared(addr.p.getAddress().getHostAddress());
+                    System.out.println("Scrivo indirizzo");
+                } catch (InterruptedException e){
+                } catch (IOException e)
+                {
                     break;
                 }
             }

@@ -66,6 +66,13 @@ public class Send extends Command {
                     return;
                 }
             }
+            try
+            {
+                out.writeUnshared(new NullResponse());
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
         }
 
     }

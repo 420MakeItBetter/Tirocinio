@@ -13,12 +13,10 @@ import java.net.Socket;
  */
 public class Show extends Command {
 
-    private InetAddress yourAddr;
-    private InetAddress myAddr;
+    private InetAddress yourAddr;;
 
-    public Show(InetAddress yourAddr,InetAddress myAddr){
+    public Show(InetAddress yourAddr){
         this.yourAddr = yourAddr;
-        this.myAddr = myAddr;
     }
 
     @Override

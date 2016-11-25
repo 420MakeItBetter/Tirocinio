@@ -84,4 +84,14 @@ public class PeerAddress implements BitSerializable {
     public InetAddress getAddress() {
         return peerAddress;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        PeerAddress a = (PeerAddress) obj;
+        if(a.getAddress() == this.peerAddress)
+            if(a.getPort() == this.port)
+                if(a.getService() == this.getService())
+                    return true;
+        return false;
+    }
 }

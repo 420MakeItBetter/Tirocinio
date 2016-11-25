@@ -37,11 +37,12 @@ public class AcceptTask implements Runnable{
             }
             peer.setPeerState(PeerState.HANDSAKE);
             peer.setSocket(skt);
+            Main.listener.addChannel(skt, SelectionKey.OP_WRITE | SelectionKey.OP_READ,peer);
             VersionTask v = new VersionTask(skt,peer);
             Main.listener.ex.execute(v);
         } catch (IOException e)
         {
-
+            e.printStackTrace();
             try
             {
                 skt.close();

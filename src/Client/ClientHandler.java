@@ -1,6 +1,8 @@
 package Client;
 
+import Client.Protocol.Connect;
 import Client.messages.SerializedMessage;
+import Client.network.ConnectTask;
 import Client.network.Peer;
 
 import java.io.IOException;
@@ -69,7 +71,9 @@ public class ClientHandler implements Runnable {
                                     close++;
                                     break;
                             }
-                        builder.append("Connessioni aperte: ")
+                        builder.append("Connessioni Totali: ")
+                                .append(ConnectTask.connections.get())
+                                .append("\nConnessioni aperte: ")
                                 .append(open)
                                 .append("\nConnessioni in fase di handshake: ")
                                 .append(handshake)

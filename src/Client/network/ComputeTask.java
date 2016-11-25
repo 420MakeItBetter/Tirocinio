@@ -6,6 +6,7 @@ import Client.Main;
 import Client.Protocol.Connect;
 import Client.Protocol.InventoryProtocol;
 import Client.Protocol.KeepAlive;
+import Client.commands.AddrStruct;
 import Client.messages.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,6 +116,12 @@ public class ComputeTask implements Runnable {
     private void verackResponse() {p.setPeerState(PeerState.OPEN);}
 
     private void saveAddressees(Address m) throws IOException {
+
+        AddressData struct = new AddressData();
+        struct.m = m;
+        struct.p = p;
+        Main.commandListener.addressess.add(struct);
+
         for(PeerAddress p : m.getAddresses())
         {
             if(!Main.peers.containsKey(p.getAddress().getHostAddress()))
@@ -131,6 +138,7 @@ public class ComputeTask implements Runnable {
                 if(peer.getTimestamp() < p.getTime())
                     peer.setTimestamp(p.getTime());
             }
+
         }
     }
 
