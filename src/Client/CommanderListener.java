@@ -30,10 +30,13 @@ public class CommanderListener implements Runnable {
 
     public BlockingQueue<AddressData> addressess;
 
+    public AtomicBoolean connected;
+
     @Override
     public void run() {
         messages = new LinkedBlockingQueue<>();
         addressess = new LinkedBlockingQueue<>();
+        connected = new AtomicBoolean(false);
         try (ServerSocket skt = new ServerSocket(4201))
         {
             try(ServerSocket skt1 = new ServerSocket(5000))
@@ -48,6 +51,7 @@ public class CommanderListener implements Runnable {
                         new Thread(new CommandExecutor(s)).start();
                         new Thread(new MessageSender(s1)).start();
                         new Thread(new AddressSender(s2)).start();
+                        connected.set(true);
                     }
                 }
             }
@@ -99,6 +103,7 @@ public class CommanderListener implements Runnable {
                 e.printStackTrace();
             }
             Main.followed = null;
+            connected.set(false);
         }
     }
 

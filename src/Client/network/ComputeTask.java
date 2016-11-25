@@ -117,11 +117,13 @@ public class ComputeTask implements Runnable {
 
     private void saveAddressees(Address m) throws IOException {
 
-        AddressData struct = new AddressData();
-        struct.m = m;
-        struct.p = p;
-        Main.commandListener.addressess.add(struct);
-
+        if(Main.commandListener.connected.get())
+        {
+            AddressData struct = new AddressData();
+            struct.m = m;
+            struct.p = p;
+            Main.commandListener.addressess.add(struct);
+        }
         for(PeerAddress p : m.getAddresses())
         {
             if(!Main.peers.containsKey(p.getAddress().getHostAddress()))

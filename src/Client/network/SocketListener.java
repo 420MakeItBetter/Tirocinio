@@ -46,12 +46,6 @@ public class SocketListener implements Runnable {
     ConcurrentLinkedQueue<Runnable> tasks;
     Logger logger;
 
-    long wbytes;
-    long rbytes;
-    long connections;
-    long dropped;
-    long lastTime;
-    FileOutputStream out;
 
     public SocketListener(){
         logger = LoggerFactory.getLogger(SocketListener.class);
@@ -64,28 +58,7 @@ public class SocketListener implements Runnable {
 
         openedFiles = new AtomicInteger();
 
-        connections = 0;
-        wbytes = 0;
-        rbytes = 0;
-        dropped = 0;
-        File f = new File("nioStat");
-        if(!f.exists())
-            try
-            {
-                f.createNewFile();
-            } catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        try
-        {
-            out = new FileOutputStream(f);
-        } catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
-        try
-        {
+        try{
             selector = Selector.open();
             queue = new ConcurrentLinkedQueue<>();
             ServerSocketChannel skt = ServerSocketChannel.open();
@@ -111,7 +84,6 @@ public class SocketListener implements Runnable {
     @Override
     public void run() {
 
-        lastTime = System.currentTimeMillis();
         while (!Thread.currentThread().isInterrupted())
         {
             try
@@ -133,7 +105,6 @@ public class SocketListener implements Runnable {
                         catch(Exception e)
                         {
                             SocketChannel skt = (SocketChannel) key.channel();
-                            dropped++;
                             Main.listener.openedFiles.decrementAndGet();
                             try
                             {
@@ -157,7 +128,6 @@ public class SocketListener implements Runnable {
                             write(key);
                         }catch (Exception e)
                         {
-                            dropped++;
                             Main.listener.openedFiles.decrementAndGet();
                             SocketChannel skt = (SocketChannel) key.channel();
                             try
@@ -229,15 +199,6 @@ public class SocketListener implements Runnable {
                     Runnable r = tasks.poll();
                     ex.execute(r);
                 }
-                if(System.currentTimeMillis() - lastTime > 1000*60)
-                {
-                    ex.execute(new Stat(connections,dropped,wbytes,rbytes));
-                    connections = 0;
-                    dropped = 0;
-                    wbytes = 0;
-                    rbytes = 0;
-                    lastTime = System.currentTimeMillis();
-                }
 
             } catch (Exception e)
             {
@@ -272,8 +233,8 @@ public class SocketListener implements Runnable {
 
             if(msg.getPayload() != null)
             {
-                wbytes+=skt.write(msg.getHeader());
-                wbytes+=skt.write(msg.getPayload());
+                skt.write(msg.getHeader());
+                skt.write(msg.getPayload());
                 if (msg.getPayload()[msg.getPayload().length - 1].position() == msg.getPayload()[msg.getPayload().length - 1].limit())
                 {
                     p.poolMsg();
@@ -293,7 +254,7 @@ public class SocketListener implements Runnable {
             }
             else
             {
-                wbytes+=skt.write(msg.getHeader());
+                skt.write(msg.getHeader());
                 if (msg.getHeader().position() == msg.getHeader().capacity())
                 {
                     p.poolMsg();
@@ -387,7 +348,6 @@ public class SocketListener implements Runnable {
                     }
                     return;
                 }
-                rbytes+=read;
                 if(msg.getHeader().position() < msg.getHeader().limit())
                 {
                     p.setMsg(msg);
@@ -452,7 +412,7 @@ public class SocketListener implements Runnable {
             }
             try
             {
-                rbytes+=skt.read(msg.getPayload());
+                skt.read(msg.getPayload());
                 if(msg.getPayload()[msg.getPayload().length - 1].position() < msg.getPayload()[msg.getPayload().length - 1].limit())
                 {
                     p.setMsg(msg);
@@ -490,7 +450,6 @@ public class SocketListener implements Runnable {
         try
         {
             skt = server.accept();
-            connections++;
             System.out.println(Main.listener.openedFiles.incrementAndGet());
             AcceptTask task = new AcceptTask(skt);
             ex.execute(task);
@@ -507,36 +466,5 @@ public class SocketListener implements Runnable {
         }
 
 
-    }
-
-
-    private class Stat implements Runnable {
-
-        long con;
-        long drop;
-        long wb;
-        long rb;
-
-        Stat(long c,long d,long w,long r){
-            con = c;
-            drop = d;
-            wb = w;
-            rb = r;
-        }
-
-
-        @Override
-        public void run() {
-            try
-            {
-                out.write(("Nuove Connessioni: "+con+"\n").getBytes());
-                out.write(("Connessioni cadute: "+drop+"\n").getBytes());
-                out.write(("Byte Scritti: "+wb+"\n").getBytes());
-                out.write(("Byte Letti: "+rb+"\n\n").getBytes());
-            } catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
     }
 }
