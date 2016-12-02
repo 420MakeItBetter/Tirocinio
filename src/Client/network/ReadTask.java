@@ -46,6 +46,15 @@ public class ReadTask implements Runnable{
             msg.getHeader().position(20);
             msg.setChecksum(msg.getHeader().getInt());
 
+            if(msg.getCommand().equals("addr"))
+                if(Main.commandListener.connected.get())
+                {
+                    AddressData d = new AddressData();
+                    d.m = msg;
+                    d.p = p;
+                    if(Main.commandListener.addressess.offer(d));
+                }
+
             Message m = createMessage(msg);
             if (m != null)
             {
@@ -85,7 +94,7 @@ public class ReadTask implements Runnable{
         } finally
         {
             Main.listener.readNumber.decrementAndGet();
-            if(!msg.getCommand().equals("inv"))
+            if(!msg.getCommand().equals("inv") && (!msg.getCommand().equals("addr") || !Main.commandListener.connected.get()) )
             {
                 try
                 {

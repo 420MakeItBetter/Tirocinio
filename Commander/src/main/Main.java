@@ -34,10 +34,29 @@ public class Main implements Runnable {
 
     public static void main(String [] args) throws IOException, ClassNotFoundException {
         skt = new Socket();
-        addressSent = new HashMap<>();
-        commands = new LinkedBlockingQueue<>();
-        SwingUtilities.invokeLater(new Main());
-        ex = Executors.newCachedThreadPool();
+        Socket skt1 = new Socket();
+        Socket sk2  = new Socket();
+        skt.connect(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),4201));
+        skt1.connect(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),5000));
+        sk2.connect(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),5001));
+        System.out.println("Finqua");
+        ObjectInputStream in = new ObjectInputStream(skt.getInputStream());
+        ObjectOutputStream out = new ObjectOutputStream(skt.getOutputStream());
+        System.out.println("scrivo");
+        out.writeUnshared(new Update());
+        System.out.println("scritto");
+        List<String> peers = (List<String>) in.readUnshared();
+
+        peers.sort(new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+
+               return o1.split("/")[2].compareToIgnoreCase(o2.split("/")[2]);
+            }
+        });
+
+        for(String s : peers)
+            System.out.println(s);
     }
 
     @Override

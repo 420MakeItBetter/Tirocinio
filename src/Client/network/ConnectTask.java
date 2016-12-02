@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
+import java.net.UnknownHostException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -28,6 +29,14 @@ public class ConnectTask implements Runnable {
     @Override
     public void run() {
         SocketChannel skt = null;
+        try
+        {
+            if(p.getAddress().equals(InetAddress.getByName("131.114.88.218")))
+                return;
+        } catch (UnknownHostException e)
+        {
+            e.printStackTrace();
+        }
         try
         {
             skt = SocketChannel.open();

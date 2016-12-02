@@ -64,13 +64,7 @@ public class KeepAliveTask implements Runnable {
                             e.printStackTrace();
                         }
                     }
-                    try
-                    {
-                        Connect.sendGetAddress(p.getSocket(),p);
-                    } catch (ClosedChannelException | InterruptedException e)
-                    {
-                        e.printStackTrace();
-                    }
+                    Main.listener.ex.execute(new AddressGetter(p.getSocket(),p,100));
                 }
             }
 

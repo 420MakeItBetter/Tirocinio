@@ -63,7 +63,7 @@ public class SocketListener implements Runnable {
             queue = new ConcurrentLinkedQueue<>();
             ServerSocketChannel skt = ServerSocketChannel.open();
             skt.configureBlocking(false);
-            skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),8333));
+            skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
             skt.register(selector,SelectionKey.OP_ACCEPT);
             ex = Executors.newCachedThreadPool();
             tasks = new ConcurrentLinkedQueue<>();
@@ -114,10 +114,9 @@ public class SocketListener implements Runnable {
                                 e1.printStackTrace();
                             }
                             Peer p = (Peer) key.attachment();
-                            p.incrementAttempt();
                             p.setVersion(false);
                             p.setPeerState(PeerState.CLOSE);
-                            Main.oldnotConnectedAdressess.add(p);
+                            Main.oldalreadyConnectedAdressess.add(p);
                             key.cancel();
                         }
                     }
@@ -139,9 +138,8 @@ public class SocketListener implements Runnable {
                             }
                             Peer p = (Peer) key.attachment();
                             p.setPeerState(PeerState.CLOSE);
-                            p.incrementAttempt();
                             p.setVersion(false);
-                            Main.oldnotConnectedAdressess.add(p);
+                            Main.oldalreadyConnectedAdressess.add(p);
                             key.cancel();
                         }
                     }
@@ -230,7 +228,6 @@ public class SocketListener implements Runnable {
                 addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
                 return;
             }
-
             if(msg.getPayload() != null)
             {
                 skt.write(msg.getHeader());
@@ -251,6 +248,7 @@ public class SocketListener implements Runnable {
                 }
                 if (p.hasNoPendingMessage())
                     addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
+
             }
             else
             {
@@ -336,9 +334,7 @@ public class SocketListener implements Runnable {
                     skt.close();
                     //setto lo stato del peer
                     p.setPeerState(PeerState.CLOSE);
-                    //ritorno il buffer preso
-                    p.incrementAttempt();
-                    Main.oldnotConnectedAdressess.add(p);
+                    Main.oldalreadyConnectedAdressess.add(p);
                     try
                     {
                         SerializedMessage.returnHeader(msg.getHeader());

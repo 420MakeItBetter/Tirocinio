@@ -42,10 +42,6 @@ public class ComputeTask implements Runnable {
         try
         {
             p.setTimestamp((int) (System.currentTimeMillis()/BitConstants.TIME));
-            if(p == Main.followed)
-            {
-                Main.commandListener.messages.add(m.toString());
-            }
             if(Main.showLog)
                 logger.info("Messaggio ricevuto {} da {}",m.getCommand(),p.getAddress());
             if(m instanceof VerAck)
@@ -54,8 +50,8 @@ public class ComputeTask implements Runnable {
                 versionResponse((Version) m);
             else if(m instanceof Ping)
                 pingResponse((Ping) m);
-            else if(m instanceof Address)
-                saveAddressees((Address) m);
+           // else if(m instanceof Address)
+           //     saveAddressees((Address) m);
             else if(m instanceof Inventory)
                 inventoryStat((Inventory) m);
             else if(m instanceof GetAddress)
@@ -117,13 +113,6 @@ public class ComputeTask implements Runnable {
 
     private void saveAddressees(Address m) throws IOException {
 
-        if(Main.commandListener.connected.get())
-        {
-            AddressData struct = new AddressData();
-            struct.m = m;
-            struct.p = p;
-            Main.commandListener.addressess.add(struct);
-        }
         for(PeerAddress p : m.getAddresses())
         {
             if(!Main.peers.containsKey(p.getAddress().getHostAddress()))
@@ -167,8 +156,11 @@ public class ComputeTask implements Runnable {
         p.setPort(m.getYourAddress().getPort());
         p.setAgent(m.getUserAgent());
         Connect.sendVerAck(ack,skt,p);
-        Runnable r = new AddressGetter(skt,p);
+        /*
+        Runnable r = new AddressGetter(skt, p, 10);
         Main.listener.tasks.add(r);
+        */
+
     }
 
 

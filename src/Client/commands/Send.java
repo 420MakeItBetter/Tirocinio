@@ -1,11 +1,13 @@
 package Client.commands;
 
+import Client.BitConstants;
 import Client.Main;
 import Client.Protocol.ProtocolUtil;
 import Client.messages.Message;
 import Client.messages.SerializedMessage;
 import Client.network.Peer;
 import Client.network.PeerState;
+import Client.utils.IOUtils;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -42,36 +44,35 @@ public class Send extends Command {
                 {
                 }
                 ByteBuffer[] payload = null;
-                try
-                {
-                    payload = ProtocolUtil.writePayload(m);
-                } catch (InterruptedException ignored)
-                {
-                } catch (IOException e)
-                {
+                if(m.getLength() > 0)
                     try
                     {
-                        SerializedMessage.returnHeader(header);
+                        payload = ProtocolUtil.writePayload(m);
                     } catch (InterruptedException ignored)
                     {
+                    } catch (IOException e)
+                    {
+                        try
+                        {
+                            SerializedMessage.returnHeader(header);
+                        } catch (InterruptedException ignored)
+                        {
+                        }
+                        return;
                     }
-                    return;
+                if(m.getLength() > 0)
+                    header.put(ProtocolUtil.getChecksum(payload));
+                else
+                {
+                    header.put(IOUtils.intToByteArray(BitConstants.CHECKSUM));
+                    header.rewind();
                 }
-                header.put(ProtocolUtil.getChecksum(payload));
                 try
                 {
                     ProtocolUtil.sendMessage(header, payload, p.getSocket(), p);
                 } catch (ClosedChannelException e)
                 {
-                    return;
                 }
-            }
-            try
-            {
-                out.writeUnshared(new NullResponse());
-            } catch (IOException e)
-            {
-                e.printStackTrace();
             }
         }
 

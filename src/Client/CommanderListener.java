@@ -4,6 +4,7 @@ import Client.commands.AddrStruct;
 import Client.commands.Command;
 import Client.commands.Exit;
 import Client.messages.Address;
+import Client.messages.SerializedMessage;
 import Client.network.AddressData;
 import Client.network.Peer;
 import Client.network.PeerState;
@@ -11,10 +12,12 @@ import Client.network.PeerState;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -34,8 +37,8 @@ public class CommanderListener implements Runnable {
 
     @Override
     public void run() {
-        messages = new LinkedBlockingQueue<>();
-        addressess = new LinkedBlockingQueue<>();
+        messages = new LinkedBlockingQueue<>(50000);
+        addressess = new LinkedBlockingQueue<>(50000);
         connected = new AtomicBoolean(false);
         try (ServerSocket skt = new ServerSocket(4201))
         {
@@ -104,6 +107,8 @@ public class CommanderListener implements Runnable {
             }
             Main.followed = null;
             connected.set(false);
+            messages.clear();
+            addressess.clear();
         }
     }
 
@@ -146,10 +151,10 @@ public class CommanderListener implements Runnable {
 
         @Override
         public void run() {
-            ObjectOutputStream out = null;
+            OutputStream out = null;
             try
             {
-                out = new ObjectOutputStream(skt.getOutputStream());
+                out = skt.getOutputStream();
             } catch (IOException e)
             {
                 e.printStackTrace();
@@ -159,9 +164,15 @@ public class CommanderListener implements Runnable {
                 try
                 {
                     AddressData addr = addressess.take();
-                    out.writeUnshared(addr.m);
-                    out.writeUnshared(addr.p.getAddress().getHostAddress());
+                    out.write(addr.m.getHeader().array());
+                    for(int i = 0; i < addr.m.getPayload().length - 1;i++)
+                        out.write(addr.m.getPayload()[i].array());
+                    out.write(addr.m.getPayload()[addr.m.getPayload().length - 1].array(),0,addr.m.getPayload()[addr.m.getPayload().length - 1].limit());
+                    out.write(addr.p.getAddress().getHostAddress().getBytes().length);
+                    out.write(addr.p.getAddress().getHostAddress().getBytes());
                     System.out.println("Scrivo indirizzo");
+                    SerializedMessage.returnHeader(addr.m.getHeader());
+                    SerializedMessage.returnPayload(addr.m.getPayload());
                 } catch (InterruptedException e){
                 } catch (IOException e)
                 {
