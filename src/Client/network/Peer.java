@@ -4,6 +4,7 @@ package Client.network;
 
 import Client.messages.SerializedMessage;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
@@ -30,12 +31,10 @@ public class Peer implements Comparable<Peer>{
     private SerializedMessage incompleteMsg;
     private PeerState state;
     private SocketChannel skt;
-    private int tests;
     private String agent;
 
     public Peer(InetAddress addr,int port){
         attempt = 0;
-        tests = 0;
         newVersion = true;
         pendingMessages = new ConcurrentLinkedQueue<>();
         this.addr = addr;
@@ -145,6 +144,15 @@ public class Peer implements Comparable<Peer>{
         return res;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        Peer o = (Peer) obj;
+        if(addr.getHostAddress().equals(o.getAddress().getHostAddress()))
+            if(port == o.getPort())
+                return true;
+        return false;
+    }
+
     public void incrementAttempt() {
         attempt++;
     }
@@ -155,13 +163,6 @@ public class Peer implements Comparable<Peer>{
         return addr.toString()+" "+port+" "+service+" "+state+"\n"+incompleteMsg+"\n"+pendingMessages;
     }
 
-    public void incrementTests() {
-        tests++;
-    }
-
-    public int getTests() {
-        return tests;
-    }
 
     public boolean getVersion() {
         return newVersion;
@@ -170,5 +171,55 @@ public class Peer implements Comparable<Peer>{
     public void setVersion(boolean version) {
         this.newVersion = version;
     }
+
+    public void close(){
+        this.state = PeerState.CLOSE;
+        for(SerializedMessage msg : pendingMessages)
+        {
+            try
+            {
+                SerializedMessage.returnHeader(msg.getHeader());
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+            try
+            {
+                SerializedMessage.returnPayload(msg.getPayload());
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        if(incompleteMsg != null)
+        {
+            try
+            {
+                SerializedMessage.returnHeader(incompleteMsg.getHeader());
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+            try
+            {
+                SerializedMessage.returnPayload(incompleteMsg.getPayload());
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        try
+        {
+            if(this.skt != null)
+                this.skt.close();
+            this.skt = null;
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        newVersion = true;
+        attempt++;
+    }
+
 }
 

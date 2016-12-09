@@ -37,8 +37,8 @@ public class CommanderListener implements Runnable {
 
     @Override
     public void run() {
-        messages = new LinkedBlockingQueue<>(50000);
-        addressess = new LinkedBlockingQueue<>(50000);
+        messages = new LinkedBlockingQueue<>(10000);
+        addressess = new LinkedBlockingQueue<>(10000);
         connected = new AtomicBoolean(false);
         try (ServerSocket skt = new ServerSocket(4201))
         {
@@ -92,7 +92,6 @@ public class CommanderListener implements Runnable {
                     }
                     if(command instanceof Exit)
                         break;
-                    System.out.println("Eseguo comando");
                     command.execute(out);
                 }
             } catch (IOException e)
@@ -132,7 +131,6 @@ public class CommanderListener implements Runnable {
                 try {
                    String str = messages.take();
                     out.writeUnshared(str);
-                    System.out.println("Scrivo messaggio");
                 } catch (InterruptedException e) {
                 } catch (IOException e) {
                     break;
@@ -170,7 +168,6 @@ public class CommanderListener implements Runnable {
                     out.write(addr.m.getPayload()[addr.m.getPayload().length - 1].array(),0,addr.m.getPayload()[addr.m.getPayload().length - 1].limit());
                     out.write(addr.p.getAddress().getHostAddress().getBytes().length);
                     out.write(addr.p.getAddress().getHostAddress().getBytes());
-                    System.out.println("Scrivo indirizzo");
                     SerializedMessage.returnHeader(addr.m.getHeader());
                     SerializedMessage.returnPayload(addr.m.getPayload());
                 } catch (InterruptedException e){

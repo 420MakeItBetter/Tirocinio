@@ -45,16 +45,14 @@ public class KeepAliveTask implements Runnable {
                             {
                                 e.printStackTrace();
                             }
-                            p.setPeerState(PeerState.CLOSE);
-                            p.setVersion(true);
-                            p.incrementAttempt();
+                            p.close();
                             Main.oldnotConnectedAdressess.add(p);
                         }
                     }
                 }
                 if(p.getState() == PeerState.OPEN)
                 {
-                    if(System.currentTimeMillis() - p.getTime() > 1000*60*30)
+                    if(System.currentTimeMillis() - p.getTime() > 1000*60*10)
                     {
                         try
                         {
@@ -64,7 +62,6 @@ public class KeepAliveTask implements Runnable {
                             e.printStackTrace();
                         }
                     }
-                    Main.listener.ex.execute(new AddressGetter(p.getSocket(),p,100));
                 }
             }
 

@@ -31,26 +31,31 @@ public class Main {
     public static AtomicBoolean done = new AtomicBoolean(false);
 
     public static void main(String [] args) throws IOException {
-        for(int i = 83; i < 88; i++)
+        for(int i = 83; i <= 88; i++)
         {
-            if(addresses.size() == 1000)
+            if(addresses.size() == 100000)
                 break;
             if(84 <= i && i <= 85)
                 continue;
             for(int j = 0; j <= 255; j++)
             {
-                if(addresses.size() == 1000)
+                InetAddress address = InetAddress.getByName("131.114." + String.valueOf(i) + "." + String.valueOf(j));
+                for(int k = 8000; k < 9000; k++)
+                {
+                    if (addresses.size() == 100000)
+                        break;
+                    if (i == 88 && j == 218)
+                        continue;
+                    PeerAddress addr = new PeerAddress();
+                    addr.setService(1);
+                    addr.setTime((int) (System.currentTimeMillis() / 1000) - 60 * 10);
+                    addr.setPort(k);
+                    addr.setAddress(address);
+                    addresses.add(addr);
+                    System.out.println(addr.getAddress().getHostAddress());
+                }
+                if(addresses.size() == 100000)
                     break;
-                System.out.println("ok");
-                if(i == 88 && j == 218)
-                    continue;
-                PeerAddress addr = new PeerAddress();
-                addr.setService(1);
-                addr.setTime((int) (System.currentTimeMillis() / 1000) - 60*10);
-                addr.setPort(8333);
-                addr.setAddress(InetAddress.getByName("131.114."+String.valueOf(i)+"."+String.valueOf(j)));
-                addresses.add(addr);
-                System.out.println(addr.getAddress().getHostAddress());
             }
         }
         addressesSet.addAll(addresses);
@@ -112,14 +117,6 @@ public class Main {
                             System.out.println("Trovato Nodo");
                             break;
                         }
-
-                    for(int i = 0; i < 500; i++)
-                        if(i < peers.size())
-                        {
-                            String s = peers.get(i);
-                            if(!s.contains("176.10.116.242"))
-                                addr.add(InetAddress.getByName(s.split("/")[0]));
-                        }
                     if(chose != null)
                         break;
                 } catch (IOException e)
@@ -130,33 +127,48 @@ public class Main {
                     e.printStackTrace();
                 }
             }
+            List<InetAddress> tmp = new LinkedList<>();
+            try
+            {
+                tmp.add(InetAddress.getByName(chose.split("/")[0]));
+            } catch (UnknownHostException e)
+            {
+                e.printStackTrace();
+            }
             while(true)
             {
                 Address m = new Address();
                 for(PeerAddress a : addresses)
                 {
                     a.setTime((int) (System.currentTimeMillis() / 1000) - 60*10);
+                    if(m.getAddresses().size() < 1000)
+                    {
+                        m.getAddresses().add(a);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            out.writeUnshared(new Send(m, tmp));
+                        } catch (IOException e)
+                        {
+                            e.printStackTrace();
+                        }
+                        m = new Address();
+                    }
                 }
-                m.getAddresses().addAll(addresses);
-                List<InetAddress> tmp = new LinkedList<>();
+
                 try
                 {
-                    tmp.add(InetAddress.getByName(chose.split("/")[0]));
-                } catch (UnknownHostException e)
-                {
-                    e.printStackTrace();
-                }
-                try
-                {
-                    out.writeUnshared(new Send(m,tmp));
-                } catch (IOException e)
-                {
-                    e.printStackTrace();
-                }
-                try
-                {
+                    out.writeUnshared(new Update());
+                    List<String> peers = (List<String>) in.readUnshared();
+                    for(String s : peers)
+                    {
+                        if(!s.contains("176.10.116.242"))
+                            addr.add(InetAddress.getByName(s.split("/")[0]));
+                    }
                     System.out.println("Invio getAddr");
-                        System.out.println("Pronto ad inviare il primo");
+                    System.out.println("Pronto ad inviare il primo");
                     for(int i = 0; i < 1000; i++)
                     {
                         out.writeUnshared(new Send(new GetAddress(), addr));
@@ -174,10 +186,13 @@ public class Main {
                 } catch (IOException e)
                 {
                     e.printStackTrace();
+                } catch (ClassNotFoundException e)
+                {
+                    e.printStackTrace();
                 }
                 try
                 {
-                    Thread.currentThread().sleep(1000*60);
+                    Thread.currentThread().sleep(1000*60*60);
                 } catch (InterruptedException e)
                 {
                     e.printStackTrace();
@@ -254,6 +269,7 @@ public class Main {
                 try
                 {
 
+                    System.out.println("Nuovo Address");
                     in.read(buffer);
                     size = ((buffer[19] & 0xFF) << 24 | (buffer[18] & 0xFF) << 16 | (buffer[17] & 0xFF) << 8 | (buffer[16] & 0xFF));
                     if(size > 0)

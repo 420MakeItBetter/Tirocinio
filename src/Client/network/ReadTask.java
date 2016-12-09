@@ -46,14 +46,6 @@ public class ReadTask implements Runnable{
             msg.getHeader().position(20);
             msg.setChecksum(msg.getHeader().getInt());
 
-            if(msg.getCommand().equals("addr"))
-                if(Main.commandListener.connected.get())
-                {
-                    AddressData d = new AddressData();
-                    d.m = msg;
-                    d.p = p;
-                    if(Main.commandListener.addressess.offer(d));
-                }
 
             Message m = createMessage(msg);
             if (m != null)
@@ -86,6 +78,31 @@ public class ReadTask implements Runnable{
                     } catch (InterruptedException e)
                     {
                         e.printStackTrace();
+                    }
+                }
+
+            if(msg.getCommand().equals("addr"))
+                if(Main.commandListener.connected.get())
+                {
+                    AddressData d = new AddressData();
+                    d.m = msg;
+                    d.p = p;
+                    if(!Main.commandListener.addressess.offer(d))
+                    {
+                        try
+                        {
+                            SerializedMessage.returnHeader(msg.getHeader());
+                        } catch (InterruptedException e)
+                        {
+                            e.printStackTrace();
+                        }
+                        try
+                        {
+                            SerializedMessage.returnPayload(msg.getPayload());
+                        } catch (InterruptedException e)
+                        {
+                            e.printStackTrace();
+                        }
                     }
                 }
         } catch (ClosedChannelException e)
@@ -198,12 +215,19 @@ public class ReadTask implements Runnable{
         }
         message.setLength(msg.getSize());
         message.setChecksum(msg.getChecksum());
+        LittleEndianInputStream in = LittleEndianInputStream.wrap(msg.getPayload());
         try
         {
-            message.read(LittleEndianInputStream.wrap(msg.getPayload()));
+            message.read(in);
+            in.close();
             return message;
         } catch (IOException | NullPointerException e)
         {
+            try
+            {
+                in.close();
+            } catch (IOException e1)
+            {}
             System.err.println(msg+"\n"+p);
         }
 
