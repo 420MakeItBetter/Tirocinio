@@ -138,6 +138,10 @@ public class Peer implements Comparable<Peer>{
 
     @Override
     public int compareTo(Peer o) {
+        if(this.getAddress().getHostAddress().equals("176.10.116.242"))
+            return 1;
+        else if(o.getAddress().equals("176.10.116.242"))
+            return -1;
         int res = this.attempt - o.attempt;
         if(res == 0)
             res = o.timestamp - this.timestamp;

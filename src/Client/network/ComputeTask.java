@@ -50,8 +50,8 @@ public class ComputeTask implements Runnable {
                 versionResponse((Version) m);
             else if(m instanceof Ping)
                 pingResponse((Ping) m);
-           // else if(m instanceof Address)
-           //     saveAddressees((Address) m);
+            else if(m instanceof Address)
+                saveAddressees((Address) m);
             else if(m instanceof Inventory)
                 inventoryStat((Inventory) m);
             else if(m instanceof GetAddress)
@@ -156,10 +156,8 @@ public class ComputeTask implements Runnable {
         p.setPort(m.getYourAddress().getPort());
         p.setAgent(m.getUserAgent());
         Connect.sendVerAck(ack,skt,p);
-        /*
         Runnable r = new AddressGetter(skt, p, 10);
         Main.listener.tasks.add(r);
-        */
 
     }
 

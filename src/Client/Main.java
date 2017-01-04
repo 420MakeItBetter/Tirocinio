@@ -100,7 +100,6 @@ public class Main {
             e.printStackTrace();
         }
 
-        /*
         for(String s : BitConstants.DNS)
         {
             try
@@ -122,7 +121,6 @@ public class Main {
             }
         }
 
-        */
         try
         {
             Peer p = new Peer(InetAddress.getByName("176.10.116.242"),8333);
@@ -133,10 +131,6 @@ public class Main {
         {
             e.printStackTrace();
         }
-
-        /*
-            Connetto ai peer del server
-         */
 
         SerializedMessage.initializeBuffers();
         Thread thread = new Thread(listener);

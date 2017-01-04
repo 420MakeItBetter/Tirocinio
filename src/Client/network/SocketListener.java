@@ -61,10 +61,10 @@ public class SocketListener implements Runnable {
         try{
             selector = Selector.open();
             queue = new ConcurrentLinkedQueue<>();
-            //ServerSocketChannel skt = ServerSocketChannel.open();
-            //skt.configureBlocking(false);
-            //skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
-            //skt.register(selector,SelectionKey.OP_ACCEPT);
+            ServerSocketChannel skt = ServerSocketChannel.open();
+            skt.configureBlocking(false);
+            skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),8333));
+            skt.register(selector,SelectionKey.OP_ACCEPT);
             ex = Executors.newCachedThreadPool();
             tasks = new ConcurrentLinkedQueue<>();
             System.out.println("Socket creato");

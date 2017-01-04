@@ -40,6 +40,6 @@ public class AddressGetter implements Runnable {
         {
             e.printStackTrace();
         }
-        //Main.listener.addressGetter.decrementAndGet();
+        Main.listener.addressGetter.decrementAndGet();
     }
 }

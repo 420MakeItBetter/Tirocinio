@@ -5,7 +5,12 @@ import Client.messages.Address;
 import Client.messages.GetAddress;
 import Client.messages.PeerAddress;
 import Client.network.Peer;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
+import javax.print.Doc;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -140,7 +145,7 @@ public class Main {
                 Address m = new Address();
                 for(PeerAddress a : addresses)
                 {
-                    a.setTime((int) (System.currentTimeMillis() / 1000) - 60*10);
+                    a.setTime((int) (System.currentTimeMillis() / 1000));
                     if(m.getAddresses().size() < 1000)
                     {
                         m.getAddresses().add(a);
@@ -158,14 +163,32 @@ public class Main {
                     }
                 }
 
+                addr.clear();
                 try
                 {
-                    out.writeUnshared(new Update());
-                    List<String> peers = (List<String>) in.readUnshared();
-                    for(String s : peers)
+                    Document doc = null;
+                    try
                     {
-                        if(!s.contains("176.10.116.242"))
-                            addr.add(InetAddress.getByName(s.split("/")[0]));
+                        doc = Jsoup.connect("http://176.10.116.242/xbt_cgi/node_status.pl").get();
+                    } catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+
+                    Elements div = doc.getElementsByTag("div");
+
+                    int j = 0;
+                    for(Element el : div)
+                    {
+                        if (j % 60 == 0)
+                            try
+                            {
+                                InetAddress addrr = InetAddress.getByName(el.text().split(" ")[0]);
+                                addr.add(addrr);
+                            } catch (UnknownHostException e)
+                            {
+                            }
+                        j++;
                     }
                     System.out.println("Invio getAddr");
                     System.out.println("Pronto ad inviare il primo");
@@ -184,9 +207,6 @@ public class Main {
                     }
                     System.out.println("Inviati");
                 } catch (IOException e)
-                {
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e)
                 {
                     e.printStackTrace();
                 }
