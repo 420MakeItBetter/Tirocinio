@@ -9,8 +9,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import java.io.*;
 import java.net.InetAddress;
@@ -33,8 +32,6 @@ public class Main {
     public static boolean showLog=false;
 
     public static Peer followed = null;
-
-    public static Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static SocketListener listener = new SocketListener();
 
@@ -62,8 +59,6 @@ public class Main {
 
         if(!addresses.exists())
         {
-            if(showLog)
-                logger.info("File addresses.dat created, is this the first time you start this Client?");
             try
             {
                 addresses.createNewFile();

@@ -5,8 +5,7 @@ import Client.BitConstants;
 import Client.Main;
 import Client.Protocol.Connect;
 import Client.messages.SerializedMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -44,11 +43,9 @@ public class SocketListener implements Runnable {
     ConcurrentLinkedQueue<SelectorParam> queue;
     public Executor ex;
     ConcurrentLinkedQueue<Runnable> tasks;
-    Logger logger;
 
 
     public SocketListener(){
-        logger = LoggerFactory.getLogger(SocketListener.class);
         acceptNumber = new AtomicInteger();
         addressGetter = new AtomicInteger();
         computeNumber = new AtomicInteger();

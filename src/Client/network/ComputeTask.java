@@ -8,8 +8,6 @@ import Client.Protocol.InventoryProtocol;
 import Client.Protocol.KeepAlive;
 import Client.commands.AddrStruct;
 import Client.messages.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -27,7 +25,6 @@ public class ComputeTask implements Runnable {
     private SocketChannel skt;
     private Peer p;
     private Message m;
-    private Logger logger = LoggerFactory.getLogger(ReadTask.class);
 
     public ComputeTask(SocketChannel skt, Peer p,Message m){
         Main.listener.computeNumber.incrementAndGet();
@@ -42,8 +39,6 @@ public class ComputeTask implements Runnable {
         try
         {
             p.setTimestamp((int) (System.currentTimeMillis()/BitConstants.TIME));
-            if(Main.showLog)
-                logger.info("Messaggio ricevuto {} da {}",m.getCommand(),p.getAddress());
             if(m instanceof VerAck)
                 verackResponse();
             else if(m instanceof Version)

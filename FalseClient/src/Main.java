@@ -135,7 +135,7 @@ public class Main {
 
         for(PeerAddress pa : a.getAddresses())
         {
-            if(pa.getAddress().getHostAddress().contains("131.114.8"))
+            if(pa.getAddress().getHostAddress().contains("131.114.8") && !pa.getAddress().getHostAddress().equals("131.114.88.218"))
             {
                 addr.add(pa);
                 mine++;

@@ -2,6 +2,7 @@ package Client.commands;
 
 import Client.BitConstants;
 import Client.Main;
+import Client.Protocol.Connect;
 import Client.Protocol.ProtocolUtil;
 import Client.messages.Message;
 import Client.messages.SerializedMessage;
@@ -73,6 +74,10 @@ public class Send extends Command {
                 } catch (ClosedChannelException e)
                 {
                 }
+            }
+            else
+            {
+                Connect.connect(p.getAddress(),p.getPort(),p);
             }
         }
 
