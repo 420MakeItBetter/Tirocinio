@@ -118,7 +118,7 @@ public class Main {
 
         try
         {
-            Peer p = new Peer(InetAddress.getByName("176.10.116.242"),8333);
+            Peer p = new Peer(InetAddress.getByName("2600:3c01::f03c:91ff:fe69:89e9"),8333);
             p.setTimestamp((int) (System.currentTimeMillis()/1000));
             peers.put(p.getAddress().getHostAddress(),p);
             newnotConnectedAdressess.add(p);
@@ -149,34 +149,38 @@ public class Main {
                 Document doc = null;
                 try
                 {
-                    doc = Jsoup.connect("http://176.10.116.242/xbt_cgi/node_status.pl").get();
+                    doc = Jsoup.connect("https://jazzpie.com/bitcoin/").get();
+
+                    Elements div = doc.getElementsByTag("td");
+                    int i = 0;
+                    System.out.println(div.size());
+                    for(Element el : div)
+                    {
+                        if (i == 0)
+                        {
+                            try
+                            {
+                                System.out.println(el.text());
+                                InetAddress addr = InetAddress.getByName(el.text().split(" ")[0]);
+                                if (!peers.containsKey(addr.getHostAddress()))
+                                {
+                                    //System.out.println("Contiene gia");
+                                    Peer p = new Peer(addr, 8333);
+                                    p.setTimestamp((int) (System.currentTimeMillis() / 1000));
+                                    peers.put(p.getAddress().getHostAddress(), p);
+                                    newnotConnectedAdressess.add(p);
+                                }
+                            }
+                            catch (IOException e)
+                            {}
+                        }
+                        i++;
+                        if(i == 9)
+                            i = 0;
+                    }
                 } catch (IOException e)
                 {
                     e.printStackTrace();
-                }
-
-                Elements div = doc.getElementsByTag("div");
-
-                int i = 0;
-                for(Element el : div)
-                {
-                    if(i % 60 == 0)
-                        try
-                        {
-                            InetAddress addr = InetAddress.getByName(el.text().split(" ")[0]);
-                            if(!peers.containsKey(addr.getHostAddress()))
-                            {
-                                System.out.println("Contiene gia");
-                                Peer p = new Peer(addr, 8333);
-                                p.setTimestamp((int) (System.currentTimeMillis() / 1000));
-                                peers.put(p.getAddress().getHostAddress(), p);
-                                newnotConnectedAdressess.add(p);
-                            }
-                        } catch (UnknownHostException e)
-                        {
-                        }
-                    i++;
-
                 }
                 try
                 {

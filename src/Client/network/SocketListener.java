@@ -60,6 +60,7 @@ public class SocketListener implements Runnable {
             queue = new ConcurrentLinkedQueue<>();
             ServerSocketChannel skt = ServerSocketChannel.open();
             skt.configureBlocking(false);
+            //skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
             skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),8333));
             skt.register(selector,SelectionKey.OP_ACCEPT);
             ex = Executors.newCachedThreadPool();

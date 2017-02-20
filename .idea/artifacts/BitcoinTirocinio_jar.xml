@@ -3,10 +3,10 @@
     <output-path>$PROJECT_DIR$/out/artifacts/BitcoinTirocinio_jar</output-path>
     <root id="archive" name="BitcoinTirocinio.jar">
       <element id="module-output" name="BitcoinTirocinio" />
-      <element id="extracted-dir" path="$USER_HOME$/Downloads/slf4j-1.7.21/slf4j-simple-1.7.21.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/Crypto.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$USER_HOME$/Downloads/slf4j-1.7.21/slf4j-api-1.7.21.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$USER_HOME$/Downloads/jsoup-1.10.1.jar" path-in-jar="/" />
+      <element id="library" level="project" name="slf4j-api-1.7.21" />
+      <element id="library" level="project" name="slf4j-simple-1.7.21" />
+      <element id="extracted-dir" path="E:/Download/jsoup-1.10.1.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>
