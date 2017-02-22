@@ -47,47 +47,60 @@ public class MainThread implements Runnable {
                 out1 = new FileOutputStream(f);
                 out2 = new FileOutputStream(stat);
                 HashMap<String,Integer> map = new HashMap<>();
-                for(String str : Main.userAgents.keySet())
+                HashMap<String, Integer> m = new HashMap<>();
+                for(Peer p : Main.peers.values())
+                {
+                    if(p.getAgent() == null)
+                        continue;
+                    if (!map.containsKey(p.getAgent()))
+                        map.put(p.getAgent(), 1);
+                    else
+                        map.put(p.getAgent(), 1 + map.get(p.getAgent()));
+                }
+
+                for(String str : map.keySet())
                 {
                     out1.write(str.getBytes());
                     out1.write(": ".getBytes());
-                    out1.write(String.valueOf(Main.userAgents.get(str).get()).getBytes());
+                    out1.write(String.valueOf(map.get(str)).getBytes());
                     out1.write('\n');
-                    char [] arr = new char [500];
+                    char[] arr = new char[500];
                     int i = 0;
-                    for(char c : str.toCharArray())
+                    for (char c : str.toCharArray())
                     {
-                        if(c == ':')
+                        if (c == ':')
                             break;
                         else
                         {
-                            if(c == '/')
+                            if (c == '/')
                                 continue;
-                            if(i < 500)
+                            if (i < 500)
                             {
                                 arr[i] = c;
                                 i++;
-                            }
-                            else
+                            } else
                                 break;
                         }
                     }
                     Integer val = null;
-                    if(map.containsKey(String.valueOf(arr).trim()))
+                    if (m.containsKey(String.valueOf(arr).trim()))
                         val = map.get(String.valueOf(arr).trim());
                     else
                         val = 0;
-                    val+=Main.userAgents.get(str).get();
-                    map.put(String.valueOf(arr).trim(),val);
+                    val += map.get(str);
+                    m.put(String.valueOf(arr).trim(), val);
                 }
                 out1.write("------------------------\n".getBytes());
-                for(String s : map.keySet())
+                for(String s : m.keySet())
                 {
                     out1.write(s.getBytes());
                     out1.write(": ".getBytes());
-                    out1.write(String.valueOf(map.get(s)).getBytes());
+                    out1.write(String.valueOf(m.get(s)).getBytes());
                     out1.write('\n');
                 }
+
+                map = null;
+                m = null;
                 out1.close();
                 StringBuilder builder = new StringBuilder();
                 int open = 0;
@@ -149,8 +162,10 @@ public class MainThread implements Runnable {
             } catch (IOException e)
             {
                 e.printStackTrace();
+
             }
 
         }
+
     }
 }

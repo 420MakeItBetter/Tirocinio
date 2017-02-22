@@ -112,15 +112,6 @@ public class ClientHandler implements Runnable {
                                 .append("\nMemoria usata:")
                                 .append(((r.maxMemory() - r.freeMemory()) / (1024 * 1024)));
                         break;
-                    case "agent":
-                        for (String str : Main.userAgents.keySet())
-                        {
-                            builder.append(str)
-                                    .append(": ")
-                                    .append(Main.userAgents.get(str).get())
-                                    .append("\n");
-                        }
-                        break;
                     case "uptime":
                         long time = System.currentTimeMillis() - start;
                         builder.append("Client in esecuzione da: \n")

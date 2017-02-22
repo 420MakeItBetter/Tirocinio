@@ -161,6 +161,9 @@ public class Peer implements Comparable<Peer>{
         attempt++;
     }
 
+    public int getAttempt(){
+        return attempt;
+    }
 
     @Override
     public String toString() {

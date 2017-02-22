@@ -134,16 +134,6 @@ public class ComputeTask extends Task {
     }
 
     private void versionResponse(Version m) {
-        AtomicInteger number = Main.userAgents.get(m.getUserAgent());
-        if(number == null)
-            number = new AtomicInteger();
-        AtomicInteger t = Main.userAgents.put(m.getUserAgent(),number);
-        if(t != null)
-        {
-            Main.userAgents.put(m.getUserAgent(), t);
-            number = t;
-        }
-        number.incrementAndGet();
         VerAck ack = new VerAck();
         p.setPeerState(PeerState.OPEN);
         p.setService(m.getService());

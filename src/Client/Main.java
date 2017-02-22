@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Main {
 
-    public static ConcurrentHashMap<String, AtomicInteger> userAgents = new ConcurrentHashMap<>();
+
 
     public static boolean showLog=false;
 
@@ -90,6 +90,24 @@ public class Main {
                 newnotConnectedAdressess.add(p);
                 peers.put(p.getAddress().getHostAddress(),p);
             }
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        File agents = new File("./agents");
+        if(!agents.exists())
+            try
+            {
+                agents.createNewFile();
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+            FileWriter writer = null;
+        try
+        {
+            writer = new FileWriter(agents);
         } catch (IOException e)
         {
             e.printStackTrace();
@@ -182,15 +200,27 @@ public class Main {
                 {
                     e.printStackTrace();
                 }
-                try
-                {
-                    System.out.println("dormo");
-                    Thread.currentThread().sleep(1000 * 60);
-                    System.out.println("mi sveglio");
-                } catch (InterruptedException e)
-                {
-                    break;
-                }
+                long time = System.currentTimeMillis();
+
+                for(Map.Entry<String, Peer> entry : peers.entrySet())
+                    if (entry.getValue().getAttempt() > 1)
+                    {
+                        peers.remove(entry.getKey());
+                        oldalreadyConnectedAdressess.remove(entry.getValue());
+                        oldnotConnectedAdressess.remove(entry.getValue());
+                        newnotConnectedAdressess.remove(entry.getValue());
+                    }
+                long t = System.currentTimeMillis() - time;
+                if(t < 1000*60)
+                    try
+                    {
+                        System.out.println("dormo");
+                        Thread.currentThread().sleep(1000 * 60 - t);
+                        System.out.println("mi sveglio");
+                    } catch (InterruptedException e)
+                    {
+                        break;
+                    }
             }
             if(counter < 750)
             {
