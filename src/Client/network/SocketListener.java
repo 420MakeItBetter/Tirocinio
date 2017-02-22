@@ -60,8 +60,8 @@ public class SocketListener implements Runnable {
             queue = new ConcurrentLinkedQueue<>();
             ServerSocketChannel skt = ServerSocketChannel.open();
             skt.configureBlocking(false);
-            //skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
-            skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),8333));
+            skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
+            //skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),8333));
             skt.register(selector,SelectionKey.OP_ACCEPT);
             ex = Executors.newCachedThreadPool();
             tasks = new ConcurrentLinkedQueue<>();
@@ -102,6 +102,7 @@ public class SocketListener implements Runnable {
                         }
                         catch(Exception e)
                         {
+                            e.printStackTrace();
                             SocketChannel skt = (SocketChannel) key.channel();
                             Main.listener.openedFiles.decrementAndGet();
                             try
@@ -124,11 +125,20 @@ public class SocketListener implements Runnable {
                             write(key);
                         }catch (Exception e)
                         {
+                            SocketChannel skt = (SocketChannel) key.channel();
                             Main.listener.openedFiles.decrementAndGet();
+                            try
+                            {
+                                skt.close();
+                            }catch (IOException e1)
+                            {
+                                e1.printStackTrace();
+                            }
                             Peer p = (Peer) key.attachment();
                             p.close();
                             Main.oldalreadyConnectedAdressess.add(p);
                             key.cancel();
+                            e.printStackTrace();
                         }
                     }
                 }

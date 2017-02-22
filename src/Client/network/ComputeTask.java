@@ -20,47 +20,43 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by Matteo on 12/10/2016.
  *
  */
-public class ComputeTask implements Runnable {
+public class ComputeTask extends Task {
 
     private SocketChannel skt;
-    private Peer p;
     private Message m;
 
     public ComputeTask(SocketChannel skt, Peer p,Message m){
-        Main.listener.computeNumber.incrementAndGet();
         this.skt = skt;
         this.p = p;
         this.m = m;
     }
 
     @Override
-    public void run() {
+    protected void clean() {
 
-        try
-        {
-            p.setTimestamp((int) (System.currentTimeMillis()/BitConstants.TIME));
-            if(m instanceof VerAck)
-                verackResponse();
-            else if(m instanceof Version)
-                versionResponse((Version) m);
-            else if(m instanceof Ping)
-                pingResponse((Ping) m);
-            else if(m instanceof Address)
-                saveAddressees((Address) m);
-            else if(m instanceof Inventory)
-                inventoryStat((Inventory) m);
-            else if(m instanceof GetAddress)
-                sendAddress((GetAddress) m);
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        } catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-        catch (NullPointerException e)
-        {}
-        Main.listener.computeNumber.decrementAndGet();
+    }
+
+    @Override
+    protected void closeResources() {
+
+    }
+
+    @Override
+    protected void doTask() throws IOException {
+        p.setTimestamp((int) (System.currentTimeMillis()/BitConstants.TIME));
+        if(m instanceof VerAck)
+            verackResponse();
+        else if(m instanceof Version)
+            versionResponse((Version) m);
+        else if(m instanceof Ping)
+            pingResponse((Ping) m);
+        else if(m instanceof Address)
+            saveAddressees((Address) m);
+        else if(m instanceof Inventory)
+            inventoryStat((Inventory) m);
+        else if(m instanceof GetAddress)
+            sendAddress((GetAddress) m);
+
     }
 
     private void sendAddress(GetAddress m) {
@@ -128,13 +124,17 @@ public class ComputeTask implements Runnable {
         }
     }
 
-    private void pingResponse(Ping m) throws IOException, InterruptedException {
-        KeepAlive.sendPong(m,skt,p);
+    private void pingResponse(Ping m){
+        try
+        {
+            KeepAlive.sendPong(m,skt,p);
+        } catch (InterruptedException e)
+        {} catch (ClosedChannelException e)
+        {}
     }
 
-    private void versionResponse(Version m) throws ClosedChannelException, InterruptedException {
+    private void versionResponse(Version m) {
         AtomicInteger number = Main.userAgents.get(m.getUserAgent());
-        p.setPeerState(PeerState.OPEN);
         if(number == null)
             number = new AtomicInteger();
         AtomicInteger t = Main.userAgents.put(m.getUserAgent(),number);
@@ -150,10 +150,14 @@ public class ComputeTask implements Runnable {
         p.setTimestamp((int) (System.currentTimeMillis() / BitConstants.TIME));
         p.setPort(m.getYourAddress().getPort());
         p.setAgent(m.getUserAgent());
-        Connect.sendVerAck(ack,skt,p);
+        try
+        {
+            Connect.sendVerAck(ack,skt,p);
+        } catch (ClosedChannelException e)
+        {} catch (InterruptedException e)
+        {}
         Runnable r = new AddressGetter(skt, p, 10);
         Main.listener.tasks.add(r);
-
     }
 
 

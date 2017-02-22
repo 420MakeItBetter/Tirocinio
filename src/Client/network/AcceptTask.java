@@ -29,7 +29,14 @@ public class AcceptTask implements Runnable{
             skt.configureBlocking(false);
             Peer peer = null;
             if(Main.peers.containsKey(skt.socket().getInetAddress().getHostAddress()))
+            {
                 peer = Main.peers.get(skt.socket().getInetAddress().getHostAddress());
+                if(peer.getState() != PeerState.CLOSE)
+                {
+                    skt.close();
+                    return;
+                }
+            }
             else
             {
                 peer = new Peer(skt.socket().getInetAddress(), 8333);

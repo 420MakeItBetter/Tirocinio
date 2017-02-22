@@ -15,123 +15,111 @@ import java.util.Random;
  * Created by Matteo on 11/10/2016.
  *
  */
-public class ReadTask implements Runnable{
+public class ReadTask extends Task{
 
     private static Random r = new Random();
     private SocketChannel skt;
-    private Peer p;
     private SerializedMessage msg;
+    private boolean doClean;
 
     public ReadTask(SocketChannel skt,Peer p,SerializedMessage msg) {
-        Main.listener.readNumber.incrementAndGet();
         this.skt = skt;
         this.p = p;
         this.msg = msg;
+        doClean = true;
     }
 
+
     @Override
-    public void run() {
-        try
+    protected void clean() {
+        if(doClean)
         {
-
-            byte[] command = new byte[12];
-            msg.getHeader().rewind();
-            if (msg.getPayload() != null)
-                msg.flipPayload();
-            msg.getHeader().position(4);
-            msg.getHeader().get(command);
-            msg.setCommand(new String(command).trim());
-            msg.getHeader().position(20);
-            msg.setChecksum(msg.getHeader().getInt());
-
-
-            Message m = createMessage(msg);
-            if (m != null)
+            try
             {
-                if (m instanceof UnknownMessage)
-                    ((UnknownMessage) m).setCommand(msg.getCommand());
-                ComputeTask task = new ComputeTask(skt, p, m);
-                Main.listener.ex.execute(task);
+                SerializedMessage.returnHeader(msg.getHeader());
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
             }
-            if(m instanceof Inventory)
-                if(r.nextInt(100) > 60)
-                {
-                    msg.getHeader().rewind();
-                    msg.flipPayload();
-                    p.addMsg(msg);
-                    Main.listener.addChannel(skt, SelectionKey.OP_WRITE | SelectionKey.OP_READ, p);
-                }
-                else
-                {
-                    try
-                    {
-                        SerializedMessage.returnHeader(msg.getHeader());
-                    } catch (InterruptedException e)
-                    {
-                        e.printStackTrace();
-                    }
-                    try
-                    {
-                        SerializedMessage.returnPayload(msg.getPayload());
-                    } catch (InterruptedException e)
-                    {
-                        e.printStackTrace();
-                    }
-                }
-
-            if(msg.getCommand().equals("addr"))
-                if(Main.commandListener.connected.get())
-                {
-                    AddressData d = new AddressData();
-                    d.m = msg;
-                    d.p = p;
-                    if(!Main.commandListener.addressess.offer(d))
-                    {
-                        try
-                        {
-                            SerializedMessage.returnHeader(msg.getHeader());
-                        } catch (InterruptedException e)
-                        {
-                            e.printStackTrace();
-                        }
-                        try
-                        {
-                            SerializedMessage.returnPayload(msg.getPayload());
-                        } catch (InterruptedException e)
-                        {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-        } catch (ClosedChannelException e)
-        {
-            e.printStackTrace();
-        } finally
-        {
-            Main.listener.readNumber.decrementAndGet();
-            if(!msg.getCommand().equals("inv") && (!msg.getCommand().equals("addr") || !Main.commandListener.connected.get()) )
+            try
             {
-                try
-                {
-                    SerializedMessage.returnHeader(msg.getHeader());
-                } catch (InterruptedException e)
-                {
-                    e.printStackTrace();
-                }
-                try
-                {
-                    SerializedMessage.returnPayload(msg.getPayload());
-                } catch (InterruptedException e)
-                {
-                    e.printStackTrace();
-                }
+                SerializedMessage.returnPayload(msg.getPayload());
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
             }
         }
 
     }
 
+    @Override
+    protected void closeResources() {
+        try
+        {
+            SerializedMessage.returnHeader(msg.getHeader());
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        try
+        {
+            SerializedMessage.returnPayload(msg.getPayload());
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+    }
 
-    private Message createMessage(SerializedMessage msg){
+    @Override
+    protected void doTask() throws IOException{
+        byte[] command = new byte[12];
+        msg.getHeader().rewind();
+        if (msg.getPayload() != null)
+            msg.flipPayload();
+        msg.getHeader().position(4);
+        msg.getHeader().get(command);
+        msg.setCommand(new String(command).trim());
+        msg.getHeader().position(20);
+        msg.setChecksum(msg.getHeader().getInt());
+
+
+        Message m = createMessage(msg);
+        if (m != null)
+        {
+            if (m instanceof UnknownMessage)
+                ((UnknownMessage) m).setCommand(msg.getCommand());
+            ComputeTask task = new ComputeTask(skt, p, m);
+            Main.listener.ex.execute(task);
+        }
+
+        if(m instanceof Inventory)
+            if(r.nextInt(100) > 60)
+            {
+                msg.getHeader().rewind();
+                msg.flipPayload();
+                p.addMsg(msg);
+                Main.listener.addChannel(skt, SelectionKey.OP_WRITE | SelectionKey.OP_READ, p);
+                doClean = false;
+            }
+
+        if(msg.getCommand().equals("addr"))
+            if (Main.commandListener.connected.get())
+            {
+                AddressData d = new AddressData();
+                d.m = msg;
+                d.p = p;
+                if (Main.commandListener.addressess.offer(d))
+                    doClean = false;
+                else
+                {
+                    d.m = null;
+                    d.p = null;
+                }
+            }
+    }
+
+
+    private Message createMessage(SerializedMessage msg) throws IOException{
 
         Message message = null;
         switch (msg.getCommand().toLowerCase())
@@ -227,9 +215,8 @@ public class ReadTask implements Runnable{
             } catch (IOException e1)
             {}
             System.err.println(msg+"\n"+p);
+            throw new IOException();
         }
-
-        return null;
 
     }
 
