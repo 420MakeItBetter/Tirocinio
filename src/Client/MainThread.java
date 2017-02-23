@@ -60,6 +60,8 @@ public class MainThread implements Runnable {
 
                 for(String str : map.keySet())
                 {
+                    if(str == null)
+                        continue;
                     out1.write(str.getBytes());
                     out1.write(": ".getBytes());
                     out1.write(String.valueOf(map.get(str)).getBytes());
@@ -153,16 +155,9 @@ public class MainThread implements Runnable {
                         .append("s");
                 out2.write(builder.toString().getBytes());
                 out2.close();
-            } catch (InterruptedException e)
+            } catch (Exception e)
             {
                 e.printStackTrace();
-            } catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
-            } catch (IOException e)
-            {
-                e.printStackTrace();
-
             }
 
         }

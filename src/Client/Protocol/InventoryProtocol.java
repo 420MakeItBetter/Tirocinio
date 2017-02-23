@@ -16,17 +16,17 @@ public class InventoryProtocol {
 
     public static void sendInventory(Inventory msg,SocketChannel skt, Peer p) throws InterruptedException, ClosedChannelException {
         ByteBuffer header = ProtocolUtil.writeHeader(msg);
-        ByteBuffer[] payload = new ByteBuffer[0];
+        ByteBuffer payload = null;
         try
         {
             payload = ProtocolUtil.writePayload(msg);
+            header.put(ProtocolUtil.getChecksum(payload));
+            ProtocolUtil.sendMessage(header,payload,skt,p);
+
         } catch (IOException e)
         {
-            SerializedMessage.returnHeader(header);
+            e.printStackTrace();
         }
-        header.put(ProtocolUtil.getChecksum(payload));
-
-        ProtocolUtil.sendMessage(header,payload,skt,p);
 
     }
 }

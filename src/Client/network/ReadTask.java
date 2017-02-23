@@ -32,42 +32,10 @@ public class ReadTask extends Task{
 
     @Override
     protected void clean() {
-        if(doClean)
-        {
-            try
-            {
-                SerializedMessage.returnHeader(msg.getHeader());
-            } catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
-            try
-            {
-                SerializedMessage.returnPayload(msg.getPayload());
-            } catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
-        }
-
     }
 
     @Override
     protected void closeResources() {
-        try
-        {
-            SerializedMessage.returnHeader(msg.getHeader());
-        } catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-        try
-        {
-            SerializedMessage.returnPayload(msg.getPayload());
-        } catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -215,7 +183,10 @@ public class ReadTask extends Task{
             } catch (IOException e1)
             {}
             System.err.println(msg+"\n"+p);
-            throw new IOException();
+            if(e instanceof IOException)
+                throw e;
+            else
+                throw new IOException();
         }
 
     }

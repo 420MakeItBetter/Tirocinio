@@ -196,19 +196,9 @@ public class SocketListener implements Runnable {
             {
                 skt.write(msg.getHeader());
                 skt.write(msg.getPayload());
-                if (msg.getPayload()[msg.getPayload().length - 1].position() == msg.getPayload()[msg.getPayload().length - 1].limit())
+                if (msg.getPayload().position() == msg.getPayload().capacity())
                 {
                     p.poolMsg();
-                    try
-                    {
-                        SerializedMessage.returnHeader(msg.getHeader());
-                    } catch (InterruptedException e)
-                    {}
-                    try
-                    {
-                        SerializedMessage.returnPayload(msg.getPayload());
-                    } catch (InterruptedException e)
-                    {}
                 }
                 if (p.hasNoPendingMessage())
                     addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
@@ -220,11 +210,6 @@ public class SocketListener implements Runnable {
                 if (msg.getHeader().position() == msg.getHeader().capacity())
                 {
                     p.poolMsg();
-                    try
-                    {
-                        SerializedMessage.returnHeader(msg.getHeader());
-                    } catch (InterruptedException e)
-                    {}
                 }
                 if (p.hasNoPendingMessage())
                     addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
@@ -243,9 +228,7 @@ public class SocketListener implements Runnable {
         if(p.getMsg() == null)
         {
             msg = new SerializedMessage();
-            ByteBuffer header = SerializedMessage.newHeader();
-            if(header == null)
-                return;
+            ByteBuffer header = ByteBuffer.allocate(BitConstants.HEADERLENGTH);
             msg.setHeader(header);
         }
         else
@@ -256,101 +239,48 @@ public class SocketListener implements Runnable {
 
         if(msg.getHeader().position() < msg.getHeader().limit())
         {
-            try
+            int read = skt.read(msg.getHeader());
+            if (read == -1)
             {
-                int read = skt.read(msg.getHeader());
-                if(read == -1)
-                {
-                    p.close();
-                    Main.oldalreadyConnectedAdressess.add(p);
-                    try
-                    {
-                        SerializedMessage.returnHeader(msg.getHeader());
-                    } catch (InterruptedException e)
-                    {
-                        e.printStackTrace();
-                    }
-                    return;
-                }
-                if(msg.getHeader().position() < msg.getHeader().limit())
-                {
-                    p.setMsg(msg);
-                    return;
-                }
-                msg.getHeader().position(0);
-                byte [] m = new byte [4];
-                byte [] c = new byte [12];
-                byte [] b = new byte [4];
-                msg.getHeader().get(m);
-                msg.getHeader().get(c);
-                msg.getHeader().get(b);
-                msg.getHeader().position(msg.getHeader().limit());
-                int size = ((b[3] & 0xFF) << 24 | (b[2] & 0xFF) << 16 | (b[1] & 0xFF) << 8 | (b[0] & 0xFF));
-                if(!Arrays.equals(m,BitConstants.MAGIC))
-                    throw new IOException("Peer out of synch "+new String(c).trim());
-                msg.setSize(size);
-                msg.setCommand(new String(c).trim());
-
-                if(size > 0)
-                {
-                    ByteBuffer [] payload = SerializedMessage.newPayload(size);
-                    //se non e' disponibile un payload della dimensione richiesta
-                    if(payload == null)
-                    {
-                        //salvo nel peer il messaggio con l'header e ritorno, la prossima volta che provo a leggere questo codice
-                        //non sara' eseguito
-                        p.setMsg(msg);
-                        return;
-                    }
-                    msg.setPayload(payload);
-                }
-            } catch (Exception e)
-            {
-                try
-                {
-                    SerializedMessage.returnHeader(msg.getHeader());
-                } catch (InterruptedException ignored)
-                {}
-                throw e;
+                p.close();
+                Main.oldalreadyConnectedAdressess.add(p);
+                return;
             }
+            if (msg.getHeader().position() < msg.getHeader().limit())
+            {
+                p.setMsg(msg);
+                return;
+            }
+            msg.getHeader().position(0);
+            byte[] m = new byte[4];
+            byte[] c = new byte[12];
+            byte[] b = new byte[4];
+            msg.getHeader().get(m);
+            msg.getHeader().get(c);
+            msg.getHeader().get(b);
+            msg.getHeader().position(msg.getHeader().limit());
+            int size = ((b[3] & 0xFF) << 24 | (b[2] & 0xFF) << 16 | (b[1] & 0xFF) << 8 | (b[0] & 0xFF));
+            if (!Arrays.equals(m, BitConstants.MAGIC))
+                throw new IOException("Peer out of synch " + new String(c).trim());
+            msg.setSize(size);
+            msg.setCommand(new String(c).trim());
 
+            if (size > 0)
+            {
+                ByteBuffer payload = ByteBuffer.allocate(size);
+                msg.setPayload(payload);
+            }
         }
         if(msg.getSize() > 0)
         {
-            if(msg.getPayload() == null)
+            skt.read(msg.getPayload());
+            if (msg.getPayload().position() < msg.getPayload().limit())
             {
-                msg.setPayload(SerializedMessage.newPayload(msg.getSize()));
-                if(msg.getPayload() == null)
-                {
-                    p.setMsg(msg);
-                    return;
-                }
+                p.setMsg(msg);
+                return;
             }
-            try
-            {
-                skt.read(msg.getPayload());
-                if(msg.getPayload()[msg.getPayload().length - 1].position() < msg.getPayload()[msg.getPayload().length - 1].limit())
-                {
-                    p.setMsg(msg);
-                    return;
-                }
-
-                ReadTask task = new ReadTask(skt,p,msg);
-                ex.execute(task);
-            } catch (Exception e)
-            {
-                try
-                {
-                    SerializedMessage.returnHeader(msg.getHeader());
-                }catch (InterruptedException ignored)
-                {}
-                try
-                {
-                    SerializedMessage.returnPayload(msg.getPayload());
-                } catch (InterruptedException ignored)
-                {}
-                throw e;
-            }
+            ReadTask task = new ReadTask(skt, p, msg);
+            ex.execute(task);
         }
         else
         {

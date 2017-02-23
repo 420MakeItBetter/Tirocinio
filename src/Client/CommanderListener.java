@@ -163,13 +163,9 @@ public class CommanderListener implements Runnable {
                 {
                     AddressData addr = addressess.take();
                     out.write(addr.m.getHeader().array());
-                    for(int i = 0; i < addr.m.getPayload().length - 1;i++)
-                        out.write(addr.m.getPayload()[i].array());
-                    out.write(addr.m.getPayload()[addr.m.getPayload().length - 1].array(),0,addr.m.getPayload()[addr.m.getPayload().length - 1].limit());
+                    out.write(addr.m.getPayload().array());
                     out.write(addr.p.getAddress().getHostAddress().getBytes().length);
                     out.write(addr.p.getAddress().getHostAddress().getBytes());
-                    SerializedMessage.returnHeader(addr.m.getHeader());
-                    SerializedMessage.returnPayload(addr.m.getPayload());
                 } catch (InterruptedException e){
                 } catch (IOException e)
                 {

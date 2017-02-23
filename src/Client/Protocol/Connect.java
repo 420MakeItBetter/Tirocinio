@@ -55,17 +55,17 @@ public class Connect {
 
     public static void sendVersion(Version msg, SocketChannel channel, Peer p) throws InterruptedException, ClosedChannelException {
         ByteBuffer header = ProtocolUtil.writeHeader(msg);
-        ByteBuffer[] payload = new ByteBuffer[0];
+        ByteBuffer payload = null;
         try
         {
             payload = ProtocolUtil.writePayload(msg);
+            header.put(ProtocolUtil.getChecksum(payload));
+            ProtocolUtil.sendMessage(header,payload,channel,p);
         } catch (IOException e)
         {
-            SerializedMessage.returnHeader(header);
+            e.printStackTrace();
         }
-        header.put(ProtocolUtil.getChecksum(payload));
 
-        ProtocolUtil.sendMessage(header,payload,channel,p);
     }
 
 
@@ -95,17 +95,16 @@ public class Connect {
             addr.getAddresses().add(pa);
         }
         ByteBuffer header = ProtocolUtil.writeHeader(addr);
-        ByteBuffer[] payload = new ByteBuffer[0];
+        ByteBuffer payload = null;
         try
         {
             payload = ProtocolUtil.writePayload(addr);
+            header.put(ProtocolUtil.getChecksum(payload));
+            ProtocolUtil.sendMessage(header,payload,skt,p);
         } catch (IOException e)
         {
-            SerializedMessage.returnHeader(header);
         }
-        header.put(ProtocolUtil.getChecksum(payload));
 
-        ProtocolUtil.sendMessage(header,payload,skt,p);
 
     }
 

@@ -181,40 +181,8 @@ public class Peer implements Comparable<Peer>{
 
     public void close(){
         this.state = PeerState.CLOSE;
-        for(SerializedMessage msg : pendingMessages)
-        {
-            try
-            {
-                SerializedMessage.returnHeader(msg.getHeader());
-            } catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
-            try
-            {
-                SerializedMessage.returnPayload(msg.getPayload());
-            } catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
-        }
-        if(incompleteMsg != null)
-        {
-            try
-            {
-                SerializedMessage.returnHeader(incompleteMsg.getHeader());
-            } catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
-            try
-            {
-                SerializedMessage.returnPayload(incompleteMsg.getPayload());
-            } catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
-        }
+        pendingMessages.clear();
+        incompleteMsg = null;
         try
         {
             if(this.skt != null)

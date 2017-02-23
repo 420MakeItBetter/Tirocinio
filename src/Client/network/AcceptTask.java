@@ -36,6 +36,9 @@ public class AcceptTask implements Runnable{
                     skt.close();
                     return;
                 }
+                Main.oldalreadyConnectedAdressess.remove(peer);
+                Main.oldnotConnectedAdressess.remove(peer);
+                Main.newnotConnectedAdressess.remove(peer);
             }
             else
             {

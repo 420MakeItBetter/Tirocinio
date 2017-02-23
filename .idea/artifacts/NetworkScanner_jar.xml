@@ -4,9 +4,6 @@
     <root id="archive" name="NetworkScanner.jar">
       <element id="module-output" name="NetworkScanner" />
       <element id="module-output" name="BitcoinTirocinio" />
-      <element id="extracted-dir" path="$USER_HOME$/Downloads/slf4j-1.7.21/slf4j-simple-1.7.21.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/Crypto.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$USER_HOME$/Downloads/slf4j-1.7.21/slf4j-api-1.7.21.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

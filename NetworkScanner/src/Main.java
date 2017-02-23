@@ -4,13 +4,11 @@ import Client.commands.Update;
 import Client.messages.Address;
 import Client.messages.GetAddress;
 import Client.messages.PeerAddress;
-import Client.network.Peer;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import javax.print.Doc;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;

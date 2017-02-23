@@ -44,22 +44,17 @@ public class Send extends Command {
                 } catch (InterruptedException ignored)
                 {
                 }
-                ByteBuffer[] payload = null;
+                ByteBuffer payload = null;
                 if(m.getLength() > 0)
                     try
                     {
                         payload = ProtocolUtil.writePayload(m);
-                    } catch (InterruptedException ignored)
+                    } catch (InterruptedException e)
                     {
+                        e.printStackTrace();
                     } catch (IOException e)
                     {
-                        try
-                        {
-                            SerializedMessage.returnHeader(header);
-                        } catch (InterruptedException ignored)
-                        {
-                        }
-                        return;
+                        e.printStackTrace();
                     }
                 if(m.getLength() > 0)
                     header.put(ProtocolUtil.getChecksum(payload));

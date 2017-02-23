@@ -56,7 +56,7 @@ public class VersionTask extends Task {
         Version v = new Version();
         v.setMyAddress(my);
         v.setYourAddress(your);
-        v.setServices(1);
+        v.setServices(0);
         v.setTimestamp(System.currentTimeMillis() / BitConstants.TIME);
         v.setNonce(random.nextLong());
         if(p.getVersion())

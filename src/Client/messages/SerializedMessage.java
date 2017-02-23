@@ -19,11 +19,12 @@ public class SerializedMessage {
     public static final AtomicLong payloadC = new AtomicLong();
 
     private ByteBuffer header;
-    private ByteBuffer [] payload;
+    private ByteBuffer payload;
     private String command;
     private int checksum;
     private long size;
 
+    /*
     public static void initializeBuffers(){
         //creo 4.166.666 bytebuffer per gli header
         for(int i = 0; i < BitConstants.MEGA*100; i+=BitConstants.HEADERLENGTH)
@@ -125,7 +126,7 @@ public class SerializedMessage {
             payloads.put(payload[i]);
         }
     }
-
+    */
     public SerializedMessage(){}
 
 
@@ -145,11 +146,11 @@ public class SerializedMessage {
         return header;
     }
 
-    public void setPayload(ByteBuffer [] payload) {
+    public void setPayload(ByteBuffer payload) {
         this.payload = payload;
     }
 
-    public ByteBuffer [] getPayload() {
+    public ByteBuffer getPayload() {
         return payload;
     }
 
@@ -171,12 +172,10 @@ public class SerializedMessage {
 
     @Override
     public String toString() {
-        return "command: "+command+" size "+size+" checksum "+checksum+" header "+header+" payload "+payload;
+        return "command: "+command+" size "+size+" checksum "+checksum+" header "+header+" payload: "+payload;
     }
 
     public void flipPayload() {
-        if(payload != null)
-            for(ByteBuffer b : payload)
-                b.flip();
+        payload.rewind();
     }
 }

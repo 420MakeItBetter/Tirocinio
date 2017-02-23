@@ -145,7 +145,6 @@ public class Main {
             e.printStackTrace();
         }
 
-        SerializedMessage.initializeBuffers();
         Thread thread = new Thread(listener);
         thread.start();
         Thread mainThread = new Thread(new MainThread());
@@ -202,15 +201,21 @@ public class Main {
                 }
                 long time = System.currentTimeMillis();
 
+                System.out.println("Start");
                 for(Map.Entry<String, Peer> entry : peers.entrySet())
-                    if (entry.getValue().getAttempt() > 1)
+                {
+                    if(System.currentTimeMillis() - time >= 1000*60*5)
+                        break;
+                    if (entry.getValue().getState() == PeerState.CLOSE && entry.getValue().getAttempt() > 1)
                     {
                         peers.remove(entry.getKey());
                         oldalreadyConnectedAdressess.remove(entry.getValue());
                         oldnotConnectedAdressess.remove(entry.getValue());
                         newnotConnectedAdressess.remove(entry.getValue());
                     }
+                }
                 long t = System.currentTimeMillis() - time;
+                System.out.println("Done in: "+t/1000+"s");
                 if(t < 1000*60)
                     try
                     {
