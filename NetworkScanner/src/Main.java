@@ -114,7 +114,7 @@ public class Main {
                     out.writeUnshared(new Update());
                     List<String> peers = (List<String>) in.readUnshared();
                     for(String s : peers)
-                        if(s.contains("176.10.116.242"))
+                        if(s.contains("192.81.132.82") || s.contains("2600:3c01::f03c:91ff:fe69:89e9"))
                         {
                             chose = s;
                             System.out.println("Trovato Nodo");
@@ -167,18 +167,19 @@ public class Main {
                     Document doc = null;
                     try
                     {
-                        doc = Jsoup.connect("http://176.10.116.242/xbt_cgi/node_status.pl").get();
+                        doc = Jsoup.connect("https://jazzpie.com/bitcoin/").get();
                     } catch (IOException e)
                     {
                         e.printStackTrace();
                     }
 
-                    Elements div = doc.getElementsByTag("div");
+                    Elements div = doc.getElementsByTag("td");
 
                     int j = 0;
+
                     for(Element el : div)
                     {
-                        if (j % 60 == 0)
+                        if (j == 0)
                             try
                             {
                                 InetAddress addrr = InetAddress.getByName(el.text().split(" ")[0]);
@@ -187,6 +188,8 @@ public class Main {
                             {
                             }
                         j++;
+                        if(j == 9)
+                            j = 0;
                     }
                     System.out.println("Invio getAddr");
                     System.out.println("Pronto ad inviare il primo");

@@ -113,7 +113,7 @@ public class Main {
             e.printStackTrace();
         }
 
-        for(String s : BitConstants.DNS)
+       /* for(String s : BitConstants.DNS)
         {
             try
             {
@@ -133,12 +133,13 @@ public class Main {
                 e.printStackTrace();
             }
         }
-
+        */
         try
         {
-            Peer p = new Peer(InetAddress.getByName("2600:3c01::f03c:91ff:fe69:89e9"),8333);
+            Peer p = new Peer(InetAddress.getByName("192.81.132.82"),8333);
             p.setTimestamp((int) (System.currentTimeMillis()/1000));
             peers.put(p.getAddress().getHostAddress(),p);
+            Connect.connect(p.getAddress(), p.getPort(), p);
             newnotConnectedAdressess.add(p);
         } catch (UnknownHostException e)
         {
@@ -157,7 +158,7 @@ public class Main {
         keepAlive.start();
 
         int counter = 0;
-        while(true)
+       /* while(true)
         {
             counter++;
             if(counter == 1250)
@@ -208,10 +209,25 @@ public class Main {
                         break;
                     if (entry.getValue().getState() == PeerState.CLOSE && entry.getValue().getAttempt() > 1)
                     {
-                        peers.remove(entry.getKey());
-                        oldalreadyConnectedAdressess.remove(entry.getValue());
-                        oldnotConnectedAdressess.remove(entry.getValue());
-                        newnotConnectedAdressess.remove(entry.getValue());
+                        if(oldalreadyConnectedAdressess.contains(entry.getValue()))
+                        {
+                            if (entry.getValue().getAttempt() > 2)
+                            {
+                                entry.getValue().close();
+                                peers.remove(entry.getKey());
+                                oldalreadyConnectedAdressess.remove(entry.getValue());
+                                oldnotConnectedAdressess.remove(entry.getValue());
+                                newnotConnectedAdressess.remove(entry.getValue());
+                            }
+                        }
+                        else
+                        {
+                            entry.getValue().close();
+                            peers.remove(entry.getKey());
+                            oldalreadyConnectedAdressess.remove(entry.getValue());
+                            oldnotConnectedAdressess.remove(entry.getValue());
+                            newnotConnectedAdressess.remove(entry.getValue());
+                        }
                     }
                 }
                 long t = System.currentTimeMillis() - time;
@@ -266,6 +282,7 @@ public class Main {
             }
         }
 
+        */
     }
 
 }

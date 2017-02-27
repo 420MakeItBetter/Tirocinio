@@ -60,8 +60,8 @@ public class SocketListener implements Runnable {
             queue = new ConcurrentLinkedQueue<>();
             ServerSocketChannel skt = ServerSocketChannel.open();
             skt.configureBlocking(false);
-            //skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
-            skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),8333));
+            skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
+            //skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),8333));
             skt.register(selector,SelectionKey.OP_ACCEPT);
             ex = Executors.newCachedThreadPool();
             tasks = new ConcurrentLinkedQueue<>();
@@ -92,10 +92,12 @@ public class SocketListener implements Runnable {
                 {
                     if(key.isAcceptable())
                     {
+                        System.out.println("Accept");
                         accept(key);
                     }
                     else if(key.isReadable())
                     {
+                        System.out.println("Read");
                         try
                         {
                             read(key);
@@ -120,6 +122,7 @@ public class SocketListener implements Runnable {
                     }
                     else if(key.isWritable())
                     {
+                        System.out.println("Write");
                         try
                         {
                             write(key);
@@ -244,6 +247,7 @@ public class SocketListener implements Runnable {
             {
                 p.close();
                 Main.oldalreadyConnectedAdressess.add(p);
+                System.out.println("Socket closed");
                 return;
             }
             if (msg.getHeader().position() < msg.getHeader().limit())
