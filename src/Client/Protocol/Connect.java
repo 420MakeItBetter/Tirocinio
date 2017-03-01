@@ -80,30 +80,40 @@ public class Connect {
 
 
     public static void sendAddresses(SocketChannel skt, Peer p) throws InterruptedException, ClosedChannelException {
+
+
         Address addr = new Address();
+        if(Main.client != null)
+        {
+            PeerAddress pp = new PeerAddress();
+            pp.setAddress(Main.client.getInetAddress());
+            pp.setPort(8333);
+            pp.setService(0);
+            pp.setTime((int) ((System.currentTimeMillis() - 1000*60) / 1000));
+            addr.getAddresses().add(pp);
+        }
         int count = 0;
-        for(Peer peer : Main.peers.values())
+        for(PeerAddress pa: Main.addressesList)
         {
             count++;
-            if(count == 1000)
-                break;
-            PeerAddress pa = new PeerAddress();
-            pa.setAddress(peer.getAddress());
-            pa.setPort(peer.getPort());
-            pa.setService(p.getService());
-            pa.setTime(p.getTimestamp());
+            if (count == 1000)
+            {
+                ByteBuffer header = ProtocolUtil.writeHeader(addr);
+                ByteBuffer payload = null;
+                try
+                {
+                    payload = ProtocolUtil.writePayload(addr);
+                    header.put(ProtocolUtil.getChecksum(payload));
+                    ProtocolUtil.sendMessage(header,payload,skt,p);
+                } catch (IOException e)
+                {
+                }
+            }
+            addr = new Address();
             addr.getAddresses().add(pa);
         }
-        ByteBuffer header = ProtocolUtil.writeHeader(addr);
-        ByteBuffer payload = null;
-        try
-        {
-            payload = ProtocolUtil.writePayload(addr);
-            header.put(ProtocolUtil.getChecksum(payload));
-            ProtocolUtil.sendMessage(header,payload,skt,p);
-        } catch (IOException e)
-        {
-        }
+
+
 
 
     }

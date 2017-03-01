@@ -41,7 +41,7 @@ public class ConnectTask extends Task {
         } catch (IOException e1)
         {}
         p.close();
-        Main.oldnotConnectedAdressess.add(p);
+        Main.listener.ex.execute(new ConnectTask(p));
     }
 
     @Override

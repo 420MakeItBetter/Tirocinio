@@ -5,14 +5,11 @@ import Client.messages.SerializedMessage;
 import Client.messages.Version;
 import Client.Protocol.Connect;
 import Client.network.*;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 
 import java.io.*;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.channels.SocketChannel;
 import java.util.*;
@@ -27,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Main {
 
-
+    public static Socket client = null;
 
     public static boolean showLog=false;
 
@@ -46,6 +43,8 @@ public class Main {
     public static InventoryStat invStat = new InventoryStat();
 
     public static CommanderListener commandListener = new CommanderListener();
+
+    public static LinkedList<PeerAddress> addressesList = new LinkedList<>();
 
     public static void main(String [] args) {
 
@@ -74,6 +73,41 @@ public class Main {
         } catch (FileNotFoundException e)
         {
             e.printStackTrace();
+        }
+
+        for(int i = 83; i <= 88; i++)
+        {
+            if(addressesList.size() == 100000)
+                break;
+            if(84 <= i && i <= 85)
+                continue;
+            for(int j = 0; j <= 255; j++)
+            {
+                InetAddress address = null;
+                try
+                {
+                    address = InetAddress.getByName("131.114." + String.valueOf(i) + "." + String.valueOf(j));
+                } catch (UnknownHostException e)
+                {
+                    e.printStackTrace();
+                }
+                for(int k = 8000; k < 9000; k++)
+                {
+                    if (addressesList.size() == 100000)
+                        break;
+                    if (i == 88 && j == 218)
+                        continue;
+                    PeerAddress addr = new PeerAddress();
+                    addr.setService(1);
+                    addr.setTime((int) (System.currentTimeMillis() / 1000) - 60 * 10);
+                    addr.setPort(k);
+                    addr.setAddress(address);
+                    addressesList.add(addr);
+                    System.out.println(addr.getAddress().getHostAddress());
+                }
+                if(addressesList.size() == 100000)
+                    break;
+            }
         }
 
         String address;
@@ -113,7 +147,7 @@ public class Main {
             e.printStackTrace();
         }
 
-       /* for(String s : BitConstants.DNS)
+        for(String s : BitConstants.DNS)
         {
             try
             {
@@ -133,7 +167,6 @@ public class Main {
                 e.printStackTrace();
             }
         }
-        */
         try
         {
             Peer p = new Peer(InetAddress.getByName("192.81.132.82"),8333);
@@ -158,48 +191,12 @@ public class Main {
         keepAlive.start();
 
         int counter = 0;
-       /* while(true)
+        while(true)
         {
             counter++;
             if(counter == 1250)
             {
                 counter = 0;
-                Document doc = null;
-                try
-                {
-                    doc = Jsoup.connect("https://jazzpie.com/bitcoin/").get();
-
-                    Elements div = doc.getElementsByTag("td");
-                    int i = 0;
-                    System.out.println(div.size());
-                    for(Element el : div)
-                    {
-                        if (i == 0)
-                        {
-                            try
-                            {
-                                System.out.println(el.text());
-                                InetAddress addr = InetAddress.getByName(el.text().split(" ")[0]);
-                                if (!peers.containsKey(addr.getHostAddress()))
-                                {
-                                    //System.out.println("Contiene gia");
-                                    Peer p = new Peer(addr, 8333);
-                                    p.setTimestamp((int) (System.currentTimeMillis() / 1000));
-                                    peers.put(p.getAddress().getHostAddress(), p);
-                                    newnotConnectedAdressess.add(p);
-                                }
-                            }
-                            catch (IOException e)
-                            {}
-                        }
-                        i++;
-                        if(i == 9)
-                            i = 0;
-                    }
-                } catch (IOException e)
-                {
-                    e.printStackTrace();
-                }
                 long time = System.currentTimeMillis();
 
                 System.out.println("Start");
@@ -282,7 +279,6 @@ public class Main {
             }
         }
 
-        */
     }
 
 }

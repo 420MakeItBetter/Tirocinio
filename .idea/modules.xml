@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/Commander/Commander.iml" filepath="$PROJECT_DIR$/Commander/Commander.iml" />
       <module fileurl="file://$PROJECT_DIR$/FalseClient/FalseClient.iml" filepath="$PROJECT_DIR$/FalseClient/FalseClient.iml" />
       <module fileurl="file://$PROJECT_DIR$/NetworkScanner/NetworkScanner.iml" filepath="$PROJECT_DIR$/NetworkScanner/NetworkScanner.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SecondClient/SecondClient.iml" filepath="$PROJECT_DIR$/SecondClient/SecondClient.iml" />
     </modules>
   </component>
 </project>

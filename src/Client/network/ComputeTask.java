@@ -100,7 +100,19 @@ public class ComputeTask extends Task {
             }
     }
 
-    private void verackResponse() {p.setPeerState(PeerState.OPEN);}
+    private void verackResponse() {
+        p.setPeerState(PeerState.OPEN);
+        try
+        {
+            Connect.sendAddresses(skt,p);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        } catch (ClosedChannelException e)
+        {
+            e.printStackTrace();
+        }
+    }
 
     private void saveAddressees(Address m) throws IOException {
 

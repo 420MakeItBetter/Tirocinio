@@ -50,6 +50,16 @@ public class AcceptTask implements Runnable{
             Main.listener.addChannel(skt, SelectionKey.OP_WRITE | SelectionKey.OP_READ,peer);
             VersionTask v = new VersionTask(skt,peer);
             Main.listener.ex.execute(v);
+            if(Main.client != null)
+            {
+                try
+                {
+                    Main.commandListener.address.put(skt.getRemoteAddress().toString());
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
         } catch (IOException e)
         {
             e.printStackTrace();
