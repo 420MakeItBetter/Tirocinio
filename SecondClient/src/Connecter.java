@@ -27,6 +27,7 @@ public class Connecter implements Runnable{
             try
             {
                 s = address.take();
+                System.out.println("Provo a connettermi a "+s);
                 InetAddress addr = InetAddress.getByName(s);
                 Socket skt = new Socket();
                 skt.connect(new InetSocketAddress(addr,8333),10000);

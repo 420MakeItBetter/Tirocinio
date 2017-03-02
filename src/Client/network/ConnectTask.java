@@ -21,9 +21,11 @@ public class ConnectTask extends Task {
 
 
     SocketChannel skt;
+    boolean tryagain;
 
-    public ConnectTask(Peer p){
+    public ConnectTask(Peer p,boolean tryagain){
         this.p = p;
+        this.tryagain = tryagain;
         skt = null;
     }
 
@@ -41,7 +43,8 @@ public class ConnectTask extends Task {
         } catch (IOException e1)
         {}
         p.close();
-        Main.listener.ex.execute(new ConnectTask(p));
+        if(tryagain)
+            Main.listener.ex.execute(new ConnectTask(p,false));
     }
 
     @Override

@@ -32,8 +32,8 @@ public class Main {
         Socket skt = new Socket();
         try
         {
-            skt.connect(new InetSocketAddress(addr,4200));
-
+            skt.connect(new InetSocketAddress(addr,4201));
+            System.out.println("Connected");
         } catch (IOException e)
         {
             e.printStackTrace();
@@ -43,7 +43,7 @@ public class Main {
         try
         {
             reader = new BufferedReader(new InputStreamReader(skt.getInputStream()));
-
+            System.out.println("Creato reader");
         } catch (IOException e)
         {
             e.printStackTrace();
@@ -54,6 +54,7 @@ public class Main {
             try
             {
                 String s = reader.readLine();
+                System.out.println("received"+s);
                 connecter.addAddress(s);
             } catch (IOException e)
             {

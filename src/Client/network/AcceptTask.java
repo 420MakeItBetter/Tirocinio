@@ -4,6 +4,7 @@ import Client.Main;
 import com.sun.org.apache.bcel.internal.generic.Select;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.channels.*;
 
@@ -54,7 +55,7 @@ public class AcceptTask implements Runnable{
             {
                 try
                 {
-                    Main.commandListener.address.put(skt.getRemoteAddress().toString());
+                    Main.commandListener.address.put(((InetSocketAddress) skt.getRemoteAddress()).getHostName());
                 } catch (InterruptedException e)
                 {
                     e.printStackTrace();

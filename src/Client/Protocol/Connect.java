@@ -49,7 +49,7 @@ public class Connect {
     */
 
     public static void connect(InetAddress address, int port, Peer p){
-        ConnectTask t = new ConnectTask(p);
+        ConnectTask t = new ConnectTask(p,true);
         Main.listener.ex.execute(t);
     }
 

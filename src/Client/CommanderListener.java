@@ -64,10 +64,19 @@ public class CommanderListener implements Runnable {
             }
             while (true)
             {
-                String s = address.poll();
+                String s = null;
                 try
                 {
-                    writer.write(s);
+                    s = address.take();
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+                try
+                {
+                    System.out.println("Send "+s);
+                    writer.write(s+"\n");
+                    writer.flush();
                 } catch (IOException e)
                 {
                     e.printStackTrace();

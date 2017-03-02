@@ -15,6 +15,7 @@ public class ServerClient implements Runnable {
             while(true)
             {
                 Socket skt = server.accept();
+                System.out.println("Connessione in entrata");
                 new Thread(new Client(skt)).start();
             }
         } catch (IOException e)

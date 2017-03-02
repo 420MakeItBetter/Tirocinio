@@ -69,21 +69,6 @@ public class ReadTask extends Task{
                 Main.listener.addChannel(skt, SelectionKey.OP_WRITE | SelectionKey.OP_READ, p);
                 doClean = false;
             }
-
-        if(msg.getCommand().equals("addr"))
-            if (Main.commandListener.connected.get())
-            {
-                AddressData d = new AddressData();
-                d.m = msg;
-                d.p = p;
-                if (Main.commandListener.addressess.offer(d))
-                    doClean = false;
-                else
-                {
-                    d.m = null;
-                    d.p = null;
-                }
-            }
     }
 
 

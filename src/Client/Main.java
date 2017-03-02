@@ -167,17 +167,6 @@ public class Main {
                 e.printStackTrace();
             }
         }
-        try
-        {
-            Peer p = new Peer(InetAddress.getByName("192.81.132.82"),8333);
-            p.setTimestamp((int) (System.currentTimeMillis()/1000));
-            peers.put(p.getAddress().getHostAddress(),p);
-            Connect.connect(p.getAddress(), p.getPort(), p);
-            newnotConnectedAdressess.add(p);
-        } catch (UnknownHostException e)
-        {
-            e.printStackTrace();
-        }
 
         Thread thread = new Thread(listener);
         thread.start();

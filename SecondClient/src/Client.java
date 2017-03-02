@@ -166,5 +166,6 @@ public class Client implements Runnable {
             else
                 Main.other.incrementAndGet();
         }
+        System.out.println("mine: "+Main.mine.get()+" others: "+Main.other.get());
     }
 }
