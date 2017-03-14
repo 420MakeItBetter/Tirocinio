@@ -31,22 +31,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Connect {
 
 
-    /*
-    public static void connect(InetAddress address,Peer p) throws IOException {
-        SocketChannel skt = SocketChannel.open();
-        try
-        {
-            skt.configureBlocking(false);
-            skt.connect(new InetSocketAddress(address, BitConstants.PORT));
-            Main.listener.addChannel(skt, SelectionKey.OP_CONNECT, p);
-        }
-        catch (IOException e)
-        {
-            skt.close();
-            throw e;
-        }
-    }
-    */
 
     public static void connect(InetAddress address, int port, Peer p){
         ConnectTask t = new ConnectTask(p,true);
@@ -83,35 +67,31 @@ public class Connect {
 
 
         Address addr = new Address();
-        if(Main.client != null)
+        int i = 0;
+        for(Peer pp : Main.peers.values())
         {
-            PeerAddress pp = new PeerAddress();
-            pp.setAddress(Main.client.getInetAddress());
-            pp.setPort(8333);
-            pp.setService(0);
-            pp.setTime((int) ((System.currentTimeMillis() - 1000*60) / 1000));
-            addr.getAddresses().add(pp);
-        }
-        int count = 0;
-        for(PeerAddress pa: Main.addressesList)
-        {
-            count++;
-            if (count == 1000)
-            {
-                ByteBuffer header = ProtocolUtil.writeHeader(addr);
-                ByteBuffer payload = null;
-                try
-                {
-                    payload = ProtocolUtil.writePayload(addr);
-                    header.put(ProtocolUtil.getChecksum(payload));
-                    ProtocolUtil.sendMessage(header,payload,skt,p);
-                } catch (IOException e)
-                {
-                }
-            }
-            addr = new Address();
+            if(i == 1000)
+                break;
+            PeerAddress pa = new PeerAddress();
+            pa.setTime(pp.getTimestamp());
+            pa.setService(pp.getService());
+            pa.setPort(pp.getPort());
+            pa.setAddress(pp.getAddress());
             addr.getAddresses().add(pa);
+            i++;
         }
+
+        try
+        {
+            ByteBuffer header = ProtocolUtil.writeHeader(addr);
+            ByteBuffer payload = ProtocolUtil.writePayload(addr);
+            header.put(ProtocolUtil.getChecksum(payload));
+            ProtocolUtil.sendMessage(header,payload,skt,p);
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
 
 
 

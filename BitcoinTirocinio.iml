@@ -7,7 +7,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="slf4j-simple-1.7.21" level="project" />
     <orderEntry type="library" name="jsoup-1.10.1" level="project" />
     <orderEntry type="library" name="Crypto" level="project" />
   </component>

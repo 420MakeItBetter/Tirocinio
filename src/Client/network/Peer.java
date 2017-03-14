@@ -2,6 +2,9 @@ package Client.network;
 
 
 
+import Client.Main;
+import Client.eventservice.EventService;
+import Client.eventservice.events.PeerStateChangedEvent;
 import Client.messages.SerializedMessage;
 
 import java.io.IOException;
@@ -27,6 +30,7 @@ public class Peer implements Comparable<Peer>{
     private long service;
     private boolean newVersion;
     private long lastMessage;
+    private boolean in;
     private ConcurrentLinkedQueue<SerializedMessage> pendingMessages;
     private SerializedMessage incompleteMsg;
     private PeerState state;
@@ -46,6 +50,14 @@ public class Peer implements Comparable<Peer>{
 
     public void setAgent(String s){
         agent = s;
+    }
+
+    public void setIn(boolean isIn){
+        in = isIn;
+    }
+
+    public boolean isIn(){
+        return in;
     }
 
     public String getAgent(){
@@ -83,7 +95,11 @@ public class Peer implements Comparable<Peer>{
     }
 
     public void setPeerState(PeerState state) {
+        if(state == this.state)
+            return;
+        PeerState old = this.state;
         this.state = state;
+        EventService.getInstance().publish(new PeerStateChangedEvent(this,old));
     }
 
 
@@ -138,10 +154,6 @@ public class Peer implements Comparable<Peer>{
 
     @Override
     public int compareTo(Peer o) {
-        if(this.getAddress().getHostAddress().equals("176.10.116.242"))
-            return 1;
-        else if(o.getAddress().equals("176.10.116.242"))
-            return -1;
         int res = this.attempt - o.attempt;
         if(res == 0)
             res = o.timestamp - this.timestamp;
@@ -179,22 +191,29 @@ public class Peer implements Comparable<Peer>{
         this.newVersion = version;
     }
 
-    public void close(){
-        this.state = PeerState.CLOSE;
+    public boolean close(){
+        setPeerState(PeerState.CLOSE);
         pendingMessages.clear();
         incompleteMsg = null;
         try
         {
             if(this.skt != null)
+            {
                 this.skt.close();
-            this.skt = null;
+                Main.openedFiles.decrementAndGet();
+            }
         } catch (IOException e)
         {
+            this.skt = null;
             e.printStackTrace();
         }
         newVersion = true;
         attempt++;
+        return attempt < 2;
     }
 
+    public void resetAttempt() {
+        attempt = 0;
+    }
 }
 

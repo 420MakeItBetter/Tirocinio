@@ -15,7 +15,7 @@ public abstract class Task implements Runnable {
             doTask();
             clean();
         }catch (IOException e){
-            e.printStackTrace();
+            //e.printStackTrace();
             closeResources();
         }
 

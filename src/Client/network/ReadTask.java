@@ -2,6 +2,8 @@ package Client.network;
 
 import Client.Main;
 import Client.bitio.LittleEndianInputStream;
+import Client.eventservice.EventService;
+import Client.eventservice.events.MessageReceivedEvent;
 import Client.messages.*;
 
 import java.io.IOException;
@@ -20,13 +22,11 @@ public class ReadTask extends Task{
     private static Random r = new Random();
     private SocketChannel skt;
     private SerializedMessage msg;
-    private boolean doClean;
 
     public ReadTask(SocketChannel skt,Peer p,SerializedMessage msg) {
         this.skt = skt;
         this.p = p;
         this.msg = msg;
-        doClean = true;
     }
 
 
@@ -58,6 +58,7 @@ public class ReadTask extends Task{
                 ((UnknownMessage) m).setCommand(msg.getCommand());
             ComputeTask task = new ComputeTask(skt, p, m);
             Main.listener.ex.execute(task);
+            EventService.getInstance().publish(new MessageReceivedEvent(p,m));
         }
 
         if(m instanceof Inventory)
@@ -67,7 +68,6 @@ public class ReadTask extends Task{
                 msg.flipPayload();
                 p.addMsg(msg);
                 Main.listener.addChannel(skt, SelectionKey.OP_WRITE | SelectionKey.OP_READ, p);
-                doClean = false;
             }
     }
 
@@ -154,20 +154,14 @@ public class ReadTask extends Task{
         }
         message.setLength(msg.getSize());
         message.setChecksum(msg.getChecksum());
-        LittleEndianInputStream in = LittleEndianInputStream.wrap(msg.getPayload());
-        try
+        try(LittleEndianInputStream in = LittleEndianInputStream.wrap(msg.getPayload()))
         {
             message.read(in);
-            in.close();
             return message;
         } catch (IOException | NullPointerException e)
         {
-            try
-            {
-                in.close();
-            } catch (IOException e1)
-            {}
             System.err.println(msg+"\n"+p);
+            e.printStackTrace();
             if(e instanceof IOException)
                 throw e;
             else

@@ -1,20 +1,14 @@
 package Client.network;
 
 import Client.BitConstants;
-import Client.CommanderListener;
 import Client.Main;
 import Client.Protocol.Connect;
-import Client.Protocol.InventoryProtocol;
 import Client.Protocol.KeepAlive;
-import Client.commands.AddrStruct;
 import Client.messages.*;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Matteo on 12/10/2016.
@@ -130,7 +124,14 @@ public class ComputeTask extends Task {
             {
                 Peer peer = Main.peers.get(p.getAddress().getHostAddress());
                 if(peer.getTimestamp() < p.getTime())
+                {
                     peer.setTimestamp(p.getTime());
+                    peer.resetAttempt();
+                    Main.oldalreadyConnectedAdressess.remove(peer);
+                    Main.newnotConnectedAdressess.remove(peer);
+                    Main.oldnotConnectedAdressess.remove(peer);
+                    Main.newnotConnectedAdressess.add(peer);
+                }
             }
 
         }
@@ -159,7 +160,7 @@ public class ComputeTask extends Task {
         {} catch (InterruptedException e)
         {}
         Runnable r = new AddressGetter(skt, p, 10);
-        Main.listener.tasks.add(r);
+        Main.listener.ex.execute(r);
     }
 
 

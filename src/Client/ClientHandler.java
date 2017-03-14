@@ -1,13 +1,15 @@
 package Client;
 
-import Client.Protocol.Connect;
 import Client.messages.SerializedMessage;
 import Client.network.ConnectTask;
 import Client.network.Peer;
+import com.sun.management.UnixOperatingSystemMXBean;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.net.Socket;
 
 /**
@@ -64,13 +66,18 @@ public class ClientHandler implements Runnable {
                                 case OPEN:
                                     open++;
                                     break;
-                                case HANDSAKE:
+                                case HANDSHAKE:
                                     handshake++;
                                     break;
                                 case CLOSE:
                                     close++;
                                     break;
                             }
+                        OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
+                        long fd = 0;
+                        if(os instanceof UnixOperatingSystemMXBean){
+                           fd = ((UnixOperatingSystemMXBean) os).getOpenFileDescriptorCount();
+                        }
                         builder.append("Connessioni Totali: ")
                                 .append(ConnectTask.connections.get())
                                 .append("\nConnessioni aperte: ")
@@ -82,7 +89,11 @@ public class ClientHandler implements Runnable {
                                 .append("\nConnessioni totali:")
                                 .append(open + handshake + close)
                                 .append("\nConnessioni richieste in entrata:")
-                                .append(Main.listener.connected.get());
+                                .append(Main.listener.connected.get())
+                                .append("\nFile aperti: ")
+                                .append(fd)
+                                .append("\nChiavi: ")
+                                .append(Main.listener.selector.keys().size());
                         break;
                     case "inv":
                         builder.append("Errors: ")
@@ -141,5 +152,6 @@ public class ClientHandler implements Runnable {
             s.close();
         }catch (IOException e1)
         {}
+        Main.openedFiles.decrementAndGet();
     }
 }

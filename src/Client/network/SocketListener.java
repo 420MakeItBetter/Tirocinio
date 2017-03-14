@@ -3,13 +3,11 @@ package Client.network;
 
 import Client.BitConstants;
 import Client.Main;
-import Client.Protocol.Connect;
+import Client.eventservice.EventService;
+import Client.eventservice.events.MessageSentEvent;
 import Client.messages.SerializedMessage;
 
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -20,7 +18,6 @@ import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -36,13 +33,9 @@ public class SocketListener implements Runnable {
     public AtomicInteger versionNumber;
     public AtomicInteger connected;
 
-    public AtomicInteger openedFiles;
-
-
-    Selector selector;
+    public Selector selector;
     ConcurrentLinkedQueue<SelectorParam> queue;
     public Executor ex;
-    ConcurrentLinkedQueue<Runnable> tasks;
 
 
     public SocketListener(){
@@ -53,18 +46,17 @@ public class SocketListener implements Runnable {
         versionNumber = new AtomicInteger();
         connected = new AtomicInteger();
 
-        openedFiles = new AtomicInteger();
 
         try{
             selector = Selector.open();
+            ex = Executors.newCachedThreadPool();
             queue = new ConcurrentLinkedQueue<>();
             ServerSocketChannel skt = ServerSocketChannel.open();
+            Main.openedFiles.incrementAndGet();
             skt.configureBlocking(false);
-            //skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
-            skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),8333));
+            skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
+            //skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),8333));
             skt.register(selector,SelectionKey.OP_ACCEPT);
-            ex = Executors.newCachedThreadPool();
-            tasks = new ConcurrentLinkedQueue<>();
             System.out.println("Socket creato");
         } catch (IOException e)
         {
@@ -104,18 +96,19 @@ public class SocketListener implements Runnable {
                         {
                             e.printStackTrace();
                             SocketChannel skt = (SocketChannel) key.channel();
-                            Main.listener.openedFiles.decrementAndGet();
                             try
                             {
                                 skt.close();
+                                Main.openedFiles.decrementAndGet();
                             } catch (IOException e1)
                             {
                                 e1.printStackTrace();
                             }
                             Peer p = (Peer) key.attachment();
-                            p.close();
-                            Main.oldalreadyConnectedAdressess.add(p);
+                            if(p.close())
+                                Main.oldalreadyConnectedAdressess.add(p);
                             key.cancel();
+                            e.printStackTrace();
                         }
                     }
                     else if(key.isWritable())
@@ -126,17 +119,17 @@ public class SocketListener implements Runnable {
                         }catch (Exception e)
                         {
                             SocketChannel skt = (SocketChannel) key.channel();
-                            Main.listener.openedFiles.decrementAndGet();
                             try
                             {
                                 skt.close();
+                                Main.openedFiles.decrementAndGet();
                             }catch (IOException e1)
                             {
                                 e1.printStackTrace();
                             }
                             Peer p = (Peer) key.attachment();
-                            p.close();
-                            Main.oldalreadyConnectedAdressess.add(p);
+                            if(p.close())
+                                Main.oldalreadyConnectedAdressess.add(p);
                             key.cancel();
                             e.printStackTrace();
                         }
@@ -151,17 +144,10 @@ public class SocketListener implements Runnable {
                     }catch (ClosedChannelException e)
                     {
                         Peer p = param.getInterest();
-                        p.close();
-                        Main.oldalreadyConnectedAdressess.add(p);
+                        if(p.close())
+                            Main.oldalreadyConnectedAdressess.add(p);
                     }
                 }
-                int count = 0;
-                while(!tasks.isEmpty() && count < 5)
-                {
-                    Runnable r = tasks.poll();
-                    ex.execute(r);
-                }
-
             } catch (Exception e)
             {
                 e.printStackTrace();
@@ -195,6 +181,8 @@ public class SocketListener implements Runnable {
             if(msg.getPayload() != null)
             {
                 skt.write(msg.getHeader());
+                if(msg.getHeader().position() != msg.getHeader().capacity())
+                    return;
                 skt.write(msg.getPayload());
                 if (msg.getPayload().position() == msg.getPayload().capacity())
                 {
@@ -214,6 +202,7 @@ public class SocketListener implements Runnable {
                 if (p.hasNoPendingMessage())
                     addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
             }
+            EventService.getInstance().publish(new MessageSentEvent(p,msg));
         } catch (Exception e)
         {
             throw e;
@@ -242,8 +231,8 @@ public class SocketListener implements Runnable {
             int read = skt.read(msg.getHeader());
             if (read == -1)
             {
-                p.close();
-                Main.oldalreadyConnectedAdressess.add(p);
+                if(p.close())
+                    Main.oldalreadyConnectedAdressess.add(p);
                 return;
             }
             if (msg.getHeader().position() < msg.getHeader().limit())
@@ -296,7 +285,7 @@ public class SocketListener implements Runnable {
         try
         {
             skt = server.accept();
-            System.out.println(Main.listener.openedFiles.incrementAndGet());
+            Main.openedFiles.incrementAndGet();
             AcceptTask task = new AcceptTask(skt);
             ex.execute(task);
         } catch (Exception e)
@@ -304,6 +293,7 @@ public class SocketListener implements Runnable {
             try
             {
                 skt.close();
+                Main.openedFiles.decrementAndGet();
             } catch (IOException e1)
             {
                 e1.printStackTrace();

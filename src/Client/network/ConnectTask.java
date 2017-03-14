@@ -1,7 +1,9 @@
 package Client.network;
 
 import Client.Main;
-import Client.messages.Version;
+import Client.eventservice.EventService;
+import Client.eventservice.events.ConnectedEvent;
+import Client.eventservice.events.NotConnectedEvent;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -38,13 +40,16 @@ public class ConnectTask extends Task {
     protected void closeResources() {
         try
         {
-            System.out.println(Main.listener.openedFiles.decrementAndGet());
             skt.close();
+            Main.openedFiles.decrementAndGet();
         } catch (IOException e1)
         {}
-        p.close();
         if(tryagain)
-            Main.listener.ex.execute(new ConnectTask(p,false));
+            if(p.close())
+                Main.listener.ex.execute(new ConnectTask(p,false));
+        else if(p.close())
+                Main.oldnotConnectedAdressess.add(p);
+        EventService.getInstance().publish(new NotConnectedEvent(p));
     }
 
     @Override
@@ -56,15 +61,19 @@ public class ConnectTask extends Task {
         } catch (UnknownHostException e)
         {}
         skt = SocketChannel.open();
-        Main.listener.openedFiles.incrementAndGet();
+        Main.openedFiles.incrementAndGet();
         skt.setOption(StandardSocketOptions.SO_REUSEADDR,true);
         skt.socket().connect(new InetSocketAddress(p.getAddress(),p.getPort()),10000);
         connections.incrementAndGet();
         skt.configureBlocking(false);
-        p.setPeerState(PeerState.HANDSAKE);
+        p.setPeerState(PeerState.HANDSHAKE);
         p.setSocket(skt);
-        Main.listener.addChannel(skt, SelectionKey.OP_WRITE | SelectionKey.OP_READ,p);
+        p.setIn(false);
+        Main.listener.addChannel(skt,SelectionKey.OP_READ,p);
         VersionTask t = new VersionTask(skt,p);
         Main.listener.ex.execute(t);
+
+
+        EventService.getInstance().publish(new ConnectedEvent(p));
     }
 }

@@ -23,14 +23,10 @@ public class ProtocolUtil {
 
     public static ByteBuffer writePayload(Message m) throws InterruptedException, IOException {
         ByteBuffer payload = ByteBuffer.allocate((int) m.getLength());
-        LittleEndianOutputStream out = LittleEndianOutputStream.wrap(payload);
-        try
+        try(LittleEndianOutputStream out = LittleEndianOutputStream.wrap(payload))
         {
             m.write(out);
             return payload;
-        }finally
-        {
-            out.close();
         }
     }
 
@@ -49,9 +45,13 @@ public class ProtocolUtil {
     }
 
     public static void sendMessage(ByteBuffer header, ByteBuffer payload, SocketChannel skt, Peer p) throws ClosedChannelException {
-        header.rewind();
+        sendMessage(header,payload,skt,p,-1);
+    }
+
+    public static void sendMessage(ByteBuffer header, ByteBuffer payload, SocketChannel skt, Peer p, long id) throws ClosedChannelException {
+        header.clear();
         if(payload != null)
-            payload.rewind();
+            payload.clear();
 
         SerializedMessage message = new SerializedMessage();
 
@@ -60,7 +60,7 @@ public class ProtocolUtil {
         message.setPayload(payload);
 
         p.addMsg(message);
+        message.setId(id);
         Main.listener.addChannel(skt,SelectionKey.OP_WRITE | SelectionKey.OP_READ,p);
     }
-
 }

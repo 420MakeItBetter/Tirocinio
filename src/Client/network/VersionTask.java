@@ -8,8 +8,6 @@ import Client.messages.Version;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.nio.channels.SocketChannel;
 import java.util.Random;
 
@@ -33,10 +31,11 @@ public class VersionTask extends Task {
 
     @Override
     protected void closeResources() {
-        p.close();
-        Main.oldalreadyConnectedAdressess.add(p);
+        if(p.close())
+            Main.oldalreadyConnectedAdressess.add(p);
         try {
             skt.close();
+            Main.openedFiles.decrementAndGet();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -66,7 +65,7 @@ public class VersionTask extends Task {
         v.setUserAgent("/TestClient.0.0.1/");
         v.setHeight(BitConstants.LASTBLOCK);
         v.setRelay(true);
-        p.setPeerState(PeerState.HANDSAKE);
+        p.setPeerState(PeerState.HANDSHAKE);
         try {
             Connect.sendVersion(v, skt, p);
         } catch (InterruptedException e) {

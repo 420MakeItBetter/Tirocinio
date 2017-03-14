@@ -1,10 +1,10 @@
 package Client.network;
 
 import Client.Main;
-import com.sun.org.apache.bcel.internal.generic.Select;
+import Client.eventservice.EventService;
+import Client.eventservice.events.ConnectedEvent;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.channels.*;
 
@@ -35,6 +35,7 @@ public class AcceptTask implements Runnable{
                 if(peer.getState() != PeerState.CLOSE)
                 {
                     skt.close();
+                    Main.openedFiles.decrementAndGet();
                     return;
                 }
                 Main.oldalreadyConnectedAdressess.remove(peer);
@@ -46,28 +47,21 @@ public class AcceptTask implements Runnable{
                 peer = new Peer(skt.socket().getInetAddress(), 8333);
                 Main.peers.put(peer.getAddress().getHostAddress(), peer);
             }
-            peer.setPeerState(PeerState.HANDSAKE);
+            peer.setIn(true);
+            peer.setPeerState(PeerState.HANDSHAKE);
             peer.setSocket(skt);
             Main.listener.addChannel(skt, SelectionKey.OP_WRITE | SelectionKey.OP_READ,peer);
             VersionTask v = new VersionTask(skt,peer);
             Main.listener.ex.execute(v);
-            if(Main.client != null)
-            {
-                try
-                {
-                    Main.commandListener.address.put(((InetSocketAddress) skt.getRemoteAddress()).getHostName());
-                } catch (InterruptedException e)
-                {
-                    e.printStackTrace();
-                }
-            }
+
+            EventService.getInstance().publish(new ConnectedEvent(peer));
         } catch (IOException e)
         {
             e.printStackTrace();
             try
             {
                 skt.close();
-                System.out.println(Main.listener.openedFiles.decrementAndGet());
+                Main.openedFiles.decrementAndGet();
             } catch (IOException e1)
             {
                 e1.printStackTrace();

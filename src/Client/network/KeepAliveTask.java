@@ -1,7 +1,6 @@
 package Client.network;
 
 import Client.Main;
-import Client.Protocol.Connect;
 import Client.Protocol.KeepAlive;
 
 import java.io.IOException;
@@ -25,7 +24,7 @@ public class KeepAliveTask implements Runnable {
             }
             for(Peer p : Main.peers.values())
             {
-                if(p.getState() == PeerState.HANDSAKE)
+                if(p.getState() == PeerState.HANDSHAKE)
                 {
                     if(System.currentTimeMillis() - p.getTime() > 1000*60*5)
                     {
@@ -41,12 +40,13 @@ public class KeepAliveTask implements Runnable {
                             try
                             {
                                 p.getSocket().close();
+                                Main.openedFiles.decrementAndGet();
                             } catch (IOException e)
                             {
                                 e.printStackTrace();
                             }
-                            p.close();
-                            Main.oldnotConnectedAdressess.add(p);
+                            if(p.close())
+                                Main.oldnotConnectedAdressess.add(p);
                         }
                     }
                 }
