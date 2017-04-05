@@ -1,9 +1,8 @@
-import Client.bitio.LittleEndianInputStream;
-import Client.bitio.LittleEndianOutputStream;
-import Client.messages.*;
-import Client.BitConstants;
-import Client.network.Peer;
-import Client.utils.IOUtils;
+import client.bitio.LittleEndianInputStream;
+import client.bitio.LittleEndianOutputStream;
+import client.messages.*;
+import client.BitConstants;
+import client.utils.IOUtils;
 import io.nayuki.bitcoin.crypto.Sha256;
 
 import java.io.ByteArrayInputStream;
