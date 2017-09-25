@@ -1,6 +1,7 @@
 package client.api;
 
 import client.Main;
+import client.eventservice.filters.StateFilter;
 import client.protocol.Connect;
 import client.protocol.ProtocolUtil;
 import client.eventservice.EventService;
@@ -290,6 +291,45 @@ public class PublicInterfaceReader implements Runnable {
                     data.addMsg(msg);
                     long toTerminate = this.msg.getLong();
                     EventService.getInstance().unsubscribe(data,toTerminate);
+                    break;
+                case 8 :
+                    msg = ack(0,id);
+                    data.addMsg(msg);
+                    sub = new PeerStateChangedSubscriber();
+                    sub.id = id;
+                    sub.data = data;
+                    byte b1 = this.msg.get();
+                    switch (b1)
+                    {
+                        case 0 :
+                            filter = null;
+                            break;
+                        case 1 :
+                            filter = new StateFilter(PeerState.OPEN);
+                            break;
+                        case 2 :
+                            filter = new StateFilter(PeerState.CLOSE);
+                            break;
+                        case 3 : filter = new StateFilter(PeerState.HANDSHAKE);
+                    }
+                    EventService.getInstance().subscribe(PeerStateChangedEvent.class,filter,sub);
+                    break;
+                case 9 :
+                    msg = ack(0,id);
+                    data.addMsg(msg);
+                    sub = new ConnectionSubscriber();
+                    sub.id = id;
+                    sub.data = data;
+                    EventService.getInstance().subscribe(ConnectedEvent.class,null,sub);
+                    break;
+                case 10:
+                    msg = ack(0,id);
+                    data.addMsg(msg);
+                    sub = new NewMessageSentSubscriber();
+                    sub.id = id;
+                    sub.data = data;
+                    EventService.getInstance().subscribe(MessageSentEvent.class,null,sub);
+                    break;
                 default:
                     ByteBuffer resp = ack(1, id);
                     data.addMsg(resp);

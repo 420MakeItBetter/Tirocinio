@@ -1,26 +1,52 @@
 package client;
 
 /**
- * Created by Matteo on 11/10/2016.
+ * This class contains some constants used by the BitKer client
  *
+ * @author Matteo Franceschi mfranceschi94@gmail.com
  */
 public class BitConstants {
 
-
-    public static long KILO = 1000;
-    public static long MEGA = 1000000;
-    public static long GIGA = 1000000000;
+    /**
+     * length in byte of the header of a message
+     */
     public static int HEADERLENGTH = 24;
+    /**
+     * the position of the first byte of the Command field in a message
+     */
     public static int COMMANDPOSITION = 4;
-    public static int PAYLOADPOSITION = 24;
+    /**
+     * the position of the first byte of the Length field in a message
+     */
     public static int LENGTHPOSITION = 16;
+    /**
+     * the position of the first byte of the Checksum field in a message
+     */
     public static int CHECKSUMPOSITION = 20;
+    /**
+     * the version of the protocol used in this client
+     */
     public static int VERSION = 70002;
+    /**
+     * this array contains the magic number to be used in the Magic Number field of a message
+     */
     public static byte [] MAGIC = {(byte) 0xF9, (byte) 0xBE, (byte) 0xB4, (byte) 0xD9};
+    /**
+     * the port where this client execute the Bitcoin protocoll
+     */
     public static int PORT = 8333;
     public static int TIME = 1000;
+    /**
+     * double sha-256 hash of the void string ""
+     */
     public static int CHECKSUM = 0xE2E0F65D;
+    /**
+     * the lastblock announced by this client
+     */
     public static int LASTBLOCK = 435862;
+    /**
+     * list of the DNS server where the client can request IP address of peers
+     */
     public static String [] DNS = new String [] {
                                                     "bitseed.xf2.org",
                                                     "dnsseed.bluematt.me",
@@ -30,6 +56,9 @@ public class BitConstants {
                                                 };
 
 
+    /**
+     * list of IP address to be used if the DNS servers are down
+     */
     public static int [] seed = {
 
             0x959bd347, 0xf8de42b2, 0x73bc0518, 0xea6edc50, 0x21b00a4d, 0xc725b43d, 0xd665464d, 0x1a2a770e,

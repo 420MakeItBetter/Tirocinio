@@ -7,7 +7,9 @@ import client.eventservice.subscribers.Subscriber;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 
+import javax.swing.text.html.HTMLDocument;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -50,9 +52,13 @@ public class EventService {
         synchronized (MONITOR){
             if(subscribers == null)
                 return;
-            for(Subscription s : subscribers)
-                if(s.subscriber.id == id && s.subscriber.data.equals(data))
-                    subscribers.remove(s);
+            Iterator<Subscription> it = ((HashSet) subscribers).iterator();
+            while (it.hasNext())
+            {
+                Subscription s = it.next();
+                if (s.subscriber.id == id && s.subscriber.data.equals(data))
+                    it.remove();
+            }
         }
     }
 

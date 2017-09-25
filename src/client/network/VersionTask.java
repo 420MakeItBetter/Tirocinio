@@ -44,7 +44,7 @@ public class VersionTask extends Task {
     @Override
     protected void doTask() throws IOException {
         PeerAddress my = new PeerAddress();
-        my.setAddress(InetAddress.getByName("131.114.88.218"));
+        my.setAddress(InetAddress.getByName("131.114.2.151"));
         my.setPort(BitConstants.PORT);
         my.setService(1);
         PeerAddress your = new PeerAddress();
@@ -61,7 +61,7 @@ public class VersionTask extends Task {
             v.setVersion(BitConstants.VERSION);
         else
             v.setVersion(60001);
-        v.setUserAgent("/TestClient.0.0.1/");
+        v.setUserAgent("/BitKer/");
         v.setHeight(BitConstants.LASTBLOCK);
         v.setRelay(true);
         p.setPeerState(PeerState.HANDSHAKE);

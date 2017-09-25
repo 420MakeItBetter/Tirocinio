@@ -131,7 +131,6 @@ import java.util.concurrent.Executors;
  * sent in response to a "sendto" or "lfrom" message or during the execution of this command, indicates the state of one peer,
  * if the state is CLOSED in the moment of the request, an attempt will be made to establish a connection.
  *
- * the first state message received will have just one byte that indicates the current peer state
  *
  * byte [16] ip: the representation of the ip address of the peer.
  * byte oldState: indicate the previous state of the observed peer.
@@ -152,6 +151,56 @@ import java.util.concurrent.Executors;
  * 0-> couldn't connect.
  * 1-> connected.
  *
+ * Api version 1.1
+ *
+ * new message:
+ *
+ * 8) "peerstatechange" type can be used to request info about the changes of the peer's state
+ * 9) "connection" type can be used to request info about connections
+ * 10) "listenOut" type can be used to request info about the message sent by the listener
+ *
+ * 8) peerstatechange:
+ * byte indicates in which type of change we are interested:
+ * 0 -> any
+ * 1-> just when a state became OPEN
+ * 2-> just when a state became CLOSED
+ * 3-> just when a state became HANDSHAKE
+ *
+ * the client will be informed when a peer change state accordingly to the request
+ *
+ * 9) connection:
+ * this message has no payload, the client will be informed when a peer connect to the listener.
+ *
+ * 10) listenOut:
+ * this message has no payload, the client will start to receive info about the message sent
+ * by the listener.
+ *
+ * the listener will respond to this new messages with:
+ *
+ *
+ * state id 5 as already explained in Api version 1.0 in response of a peerstatechanged request.
+ * state message payload has changed in this way:
+ * if the newState is closed, it will have another 8 byte long after it which indicates for how long
+ * the peer remained connected to the listener
+ *
+ * newconnection id 7:
+ *
+ * in response of a connection request, indicates that a new peer has success   fully connect to the listener.
+ * the payload is made of
+ * byte [16] ip: the representation of the ip of the peer
+ * 1 byte which indicates who started the connection:
+ * 0 -> the listener connected to the peer,
+ * 1 -> the peer connected to the listener.
+ *
+ * newmessagesent id 8:
+ *
+ * in response to a listenOut request, indicates that a new message has been sent to a peer.
+ * the payload is made of
+ * byte [16] ip: the representation of the ip of the peer who the message has been sent
+ * char [12] the type of the message sent.
+ *
+ *
+ *
  */
 public class PublicInterface implements Runnable {
 
@@ -165,7 +214,8 @@ public class PublicInterface implements Runnable {
             selector = Selector.open();
             srv = ServerSocketChannel.open();
             srv.setOption(StandardSocketOptions.SO_REUSEADDR,true);
-            srv.bind(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),1994));
+            //srv.bind(new InetSocketAddress(InetAddress.getLocalHost(),1994));
+            srv.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),1994));
             srv.configureBlocking(false);
             srv.register(selector, SelectionKey.OP_ACCEPT);
             ex = Executors.newCachedThreadPool();
@@ -196,6 +246,7 @@ public class PublicInterface implements Runnable {
                         ServerSocketChannel srv = (ServerSocketChannel) k.channel();
                         SocketChannel skt = srv.accept();
                         skt.configureBlocking(false);
+                        System.out.println("nuova connessione");
                         skt.register(selector,SelectionKey.OP_READ,new ApiClientData(skt));
                     }
                     else if(k.isReadable())

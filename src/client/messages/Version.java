@@ -22,7 +22,7 @@ public class Version extends Message{
     private boolean relay;
 
     public Version(){
-        setLength(4 + 8 + 8 + 26 + 26 + 8 + 19 + 4 + 1);
+        setLength(4 + 8 + 8 + 26 + 26 + 8 + "/UnipiCore:1.0 (also definitely not a listener, trust me)/".length() + 1 + 4 + 1);
     }
 
     @Override
@@ -33,7 +33,11 @@ public class Version extends Message{
     public void setVersion(int v){
         version = v;
         if(version < 70001)
-            setLength(4 + 8 + 8 + 26 + 26 + 8 + 19 + 4);
+            setLength(4 + 8 + 8 + 26 + 26 + 8 + "/UnipiCore:1.0 (also definitely not a listener, trust me)/".length() + 1 + 4);
+    }
+
+    public int getHeight() {
+        return height;
     }
 
     public void setServices(long s){
@@ -70,6 +74,10 @@ public class Version extends Message{
 
     public void setUserAgent(String userAgent) {
         this.userAgent = userAgent;
+        if(version < 70001)
+            setLength(4 + 8 + 8 + 26 + 26 + 8 + userAgent.length() + 1 + 4);
+        else
+            setLength(4 + 8 + 8 + 26 + 26 + 8 + userAgent.length() + 1 + 4 + 1);
     }
 
     public void setHeight(int height) {
@@ -121,5 +129,9 @@ public class Version extends Message{
 
     public String getUserAgent() {
         return userAgent;
+    }
+
+    public int getVersion() {
+        return version;
     }
 }

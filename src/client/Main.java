@@ -1,8 +1,13 @@
 package client;
 
 import client.api.PublicInterface;
+import client.eventservice.EventService;
+import client.eventservice.subscribers.ConnectionLogger;
+import client.eventservice.subscribers.MessageLogger;
+import client.eventservice.subscribers.PeerStateLogger;
 import client.protocol.Connect;
 import client.network.*;
+import client.eventservice.events.*;
 
 
 import java.io.*;
@@ -14,31 +19,62 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
-
 /**
- * Created by Matteo on 07/10/2016.
  *
+ * Main class of the BitKer client, starts the various parts of the client then
+ * tries to connect to new peer
+ *
+ * @author Matteo Franceschi mfranceschi94@gmail.com
  */
 public class Main {
 
+    /**
+     *
+     */
     public static Socket client = null;
 
     public static Peer followed = null;
 
+    /**
+     * This hashmap contains al the Peers that this client knows, it's accessed
+     * by the ip address of the peer
+     */
     public static ConcurrentHashMap<String, Peer> peers = new ConcurrentHashMap<>();
 
+    /**
+     * Mantains data about the statistics of the client
+     */
     public static InventoryStat invStat = new InventoryStat();
 
+    /**
+     * The number of opened files, used for debug purpose
+     */
     public static AtomicLong openedFiles = new AtomicLong(0);
 
+    /**
+     * The class that manages all the I/O between this client and the Bitcoin network
+     */
     public static SocketListener listener = new SocketListener();
 
+    /**
+     * The class that manages the I/O of the public interfae of this client
+     */
     public static PublicInterface publicInterface = new PublicInterface();
+    /**
+     * Indicates if this client has started the procedure of termination
+     */
     public static AtomicBoolean terminate = new AtomicBoolean(false);
 
-    public static ReentrantLock connLock = new ReentrantLock();
 
+    /**
+     * Static method and entry point of the BitKer. This method first starts all the
+     * threads, then tries to connect to 1250 new IP every minute.
+     * It also set the output stream and error stream to 2 files so the entire log of
+     * Bitker can be accessed.
+     * @param args not used
+     */
     public static void main(String [] args) {
+
 
         File o = new File("out"+System.currentTimeMillis());
         if(!o.exists())
@@ -80,6 +116,9 @@ public class Main {
         }
 
         System.setErr(new PrintStream(err));
+        /*
+            Request to the Bitcoin DNS server to request a list of IP address
+         */
         for(String s : BitConstants.DNS)
         {
             try
@@ -100,6 +139,9 @@ public class Main {
             }
         }
 
+        /*
+            Create and start all the thread
+         */
         Thread thread = new Thread(listener);
         thread.start();
         Thread pubThread = new Thread(publicInterface);
@@ -112,27 +154,35 @@ public class Main {
 
         restoreConnection();
         int counter = 0;
-        while(!terminate.get())
+        /*
+            Every minutes choose 1250 not connected IP and tries to connect to them
+         */
+        try
         {
-            System.out.println("dormo");
-            try
+            while (!terminate.get())
             {
-                Thread.currentThread().sleep(1000*60);
-            } catch (InterruptedException e)
-            {
-                e.printStackTrace();
+                System.out.println("dormo");
+                try
+                {
+                    Thread.currentThread().sleep(1000 * 60);
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+                if (listener.connectNumber.get() > 0)
+                    continue;
+                System.out.println("mi sveglio");
+                tryConnect();
             }
-            if(listener.connectNumber.get() > 0)
-                continue;
-            System.out.println("mi sveglio");
-            tryConnect();
-        }
+        }catch (Exception e)
+        {}
         thread.interrupt();
         pubThread.interrupt();
         externalListener.interrupt();
         keepAlive.interrupt();
 
         saveConnections();
+        System.out.println("Connessioni salvate");
         try
         {
             Runtime.getRuntime().exec("screen java -Xmx8G -Xms8G -jar client");
@@ -145,6 +195,10 @@ public class Main {
         System.exit(0);
     }
 
+    /**
+     * This method put into the {@link ConcurrentHashMap} of peers the IP addresses saved
+     * during the last run of the BitKer client
+     */
     private static void restoreConnection() {
         File f = new File("connection.dat");
         if (!f.exists())
@@ -170,6 +224,10 @@ public class Main {
         }
     }
 
+    /**
+     * This method saves into the file connection.dat all the address
+     * of the OPEN connection
+     */
     private static void saveConnections(){
         try
         {
@@ -195,6 +253,10 @@ public class Main {
         }
     }
 
+    /**
+     * This method first orders the not connected peers then try to connect
+     * to the first 1250.
+     */
     private static void tryConnect(){
         PriorityQueue<Peer> queue = new PriorityQueue<>();
         for(Peer p : peers.values())

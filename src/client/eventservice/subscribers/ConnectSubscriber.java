@@ -15,8 +15,8 @@ public class ConnectSubscriber extends Subscriber {
 
     @Override
     public void inform(Event event) {
-        ByteBuffer msg = ByteBuffer.allocate(4+4+8+1);
-        msg.putInt(4+8+1);
+        ByteBuffer msg = ByteBuffer.allocate(4+4+8+16+1);
+        msg.putInt(4+8+16+1);
         msg.putInt(6);
         msg.putLong(id);
         if(event instanceof ConnectedEvent)

@@ -209,7 +209,10 @@ public class Alert extends Message {
         id = leis.readInt();
         cancel = leis.readInt();
         int length = (int) leis.readVariableSize();
-        cancelSet = new int [length];
+        if(length > 0)
+            cancelSet = new int [length];
+        else
+            cancelSet = null;
         for(int i = 0; i < length; i++)
             cancelSet[i] = leis.readInt();
         minVer = leis.readInt();
@@ -264,8 +267,9 @@ public class Alert extends Message {
         leos.writeInt(id);
         leos.writeInt(cancel);
         leos.writeVariableSize(cancelSet.length);
-        for(int i : cancelSet)
-            leos.writeInt(i);
+        if(cancelSet != null)
+            for(int i : cancelSet)
+                leos.writeInt(i);
         leos.writeInt(minVer);
         leos.writeInt(maxVer);
         leos.writeVariableSize(subVerSet.length);

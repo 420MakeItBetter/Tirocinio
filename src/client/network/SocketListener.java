@@ -62,7 +62,7 @@ public class SocketListener implements Runnable {
             skt.setOption(StandardSocketOptions.SO_REUSEADDR,true);
             skt.configureBlocking(false);
             //skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
-            skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.88.218"),8333));
+            skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),8333));
             skt.register(selector,SelectionKey.OP_ACCEPT);
             System.out.println("Socket creato");
         } catch (IOException e)
@@ -201,6 +201,7 @@ public class SocketListener implements Runnable {
         if(skt.finishConnect())
         {
             p.setPeerState(PeerState.HANDSHAKE);
+            p.setConnectionTime(System.currentTimeMillis());
             VersionTask t = new VersionTask(skt,p);
             ex.execute(t);
             addChannel(skt,SelectionKey.OP_READ,p);

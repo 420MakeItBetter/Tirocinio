@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class Peer implements Comparable<Peer>{
 
     private InetAddress addr;
+    private long connectionTime;
     private int attempt;
     private int port;
     private int timestamp;
@@ -45,6 +46,7 @@ public class Peer implements Comparable<Peer>{
         skt = null;
         incompleteMsg = null;
         setTime();
+        connectionTime = 0;
     }
 
     public void setAgent(String s){
@@ -224,6 +226,14 @@ public class Peer implements Comparable<Peer>{
 
     public void setKey(SelectionKey key) {
         this.key = key;
+    }
+
+    public long getConnectionTime() {
+        return connectionTime;
+    }
+
+    public void setConnectionTime(long connectionTime) {
+        this.connectionTime = connectionTime;
     }
 }
 

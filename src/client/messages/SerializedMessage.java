@@ -11,11 +11,6 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class SerializedMessage {
 
-    public static final BlockingQueue<ByteBuffer> headers = new LinkedBlockingQueue<>();
-    public static final BlockingQueue<ByteBuffer> payloads = new LinkedBlockingQueue<>();
-    public static final AtomicLong headerC = new AtomicLong();
-    public static final AtomicLong payloadC = new AtomicLong();
-
     private ByteBuffer header;
     private ByteBuffer payload;
     private String command;
