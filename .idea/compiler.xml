@@ -9,7 +9,6 @@
         <module name="Bitcoin-Cryptography-Library" />
         <module name="BitKer" />
         <module name="controller" />
-        <module name="message-protocol" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
