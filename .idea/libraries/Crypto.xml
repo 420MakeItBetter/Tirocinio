@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Crypto">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../Crypto/out/artifacts/Crypto_jar/Crypto.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

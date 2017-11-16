@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/BitcoinTirocinio.iml" filepath="$PROJECT_DIR$/BitcoinTirocinio.iml" />
-      <module fileurl="file://$PROJECT_DIR$/SecondClient/SecondClient.iml" filepath="$PROJECT_DIR$/SecondClient/SecondClient.iml" />
+      <module fileurl="file://$PROJECT_DIR$/BitKer.iml" filepath="$PROJECT_DIR$/BitKer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Bitcoin-Cryptography-Library/Bitcoin-Cryptography-Library.iml" filepath="$PROJECT_DIR$/../Bitcoin-Cryptography-Library/Bitcoin-Cryptography-Library.iml" />
+      <module fileurl="file://$PROJECT_DIR$/controller/controller.iml" filepath="$PROJECT_DIR$/controller/controller.iml" />
+      <module fileurl="file://$PROJECT_DIR$/message-protocol/message-protocol.iml" filepath="$PROJECT_DIR$/message-protocol/message-protocol.iml" />
     </modules>
   </component>
 </project>

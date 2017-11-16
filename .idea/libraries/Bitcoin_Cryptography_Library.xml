@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Bitcoin-Cryptography-Library">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Bitcoin-Cryptography-Library/out/artifacts/Bitcoin_Cryptography_Library_jar/Bitcoin-Cryptography-Library.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
