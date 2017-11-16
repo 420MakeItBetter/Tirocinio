@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="BitKer:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/BitKer_jar</output-path>
+    <root id="archive" name="BitKer.jar">
+      <element id="module-output" name="BitKer" />
+      <element id="module-output" name="message-protocol" />
+      <element id="module-output" name="Bitcoin-Cryptography-Library" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../Bitcoin-Cryptography-Library/out/artifacts/Bitcoin_Cryptography_Library_jar/Bitcoin-Cryptography-Library.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$APPLICATION_HOME_DIR$/redist/annotations-java8.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$APPLICATION_HOME_DIR$/lib/junit-4.12.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$APPLICATION_HOME_DIR$/lib/hamcrest-core-1.3.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

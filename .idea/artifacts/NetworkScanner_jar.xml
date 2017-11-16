@@ -1,9 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="NetworkScanner:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/NetworkScanner_jar</output-path>
-    <root id="archive" name="NetworkScanner.jar">
-      <element id="module-output" name="NetworkScanner" />
-      <element id="module-output" name="BitcoinTirocinio" />
-    </root>
-  </artifact>
-</component>
