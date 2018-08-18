@@ -1,7 +1,8 @@
 package com.bitker.protocol;
 
-import com.bitker.messages.Inventory;
+
 import com.bitker.network.Peer;
+import com.bitkermessage.client.messages.messages.Inventory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

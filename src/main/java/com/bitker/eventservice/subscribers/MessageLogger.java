@@ -3,7 +3,7 @@ package com.bitker.eventservice.subscribers;
 import com.bitker.eventservice.events.Event;
 import com.bitker.eventservice.events.MessageReceivedEvent;
 import com.bitker.eventservice.events.MessageSentEvent;
-import com.bitker.messages.Version;
+import com.bitkermessage.client.messages.messages.Version;
 
 import java.io.PrintWriter;
 

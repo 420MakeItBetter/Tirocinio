@@ -1,8 +1,8 @@
 package com.bitker.protocol;
 
-import com.bitker.messages.Ping;
-import com.bitker.messages.Pong;
 import com.bitker.network.Peer;
+import com.bitkermessage.client.messages.messages.Ping;
+import com.bitkermessage.client.messages.messages.Pong;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -19,7 +19,7 @@ public class KeepAlive {
     private static Random rand = new Random();
 
     public static void sendPing(SocketChannel skt, Peer p) throws InterruptedException, ClosedChannelException {
-        Ping  message = new Ping();
+        Ping message = new Ping();
         message.setNonce(rand.nextLong());
         ByteBuffer header = ProtocolUtil.writeHeader(message);
         ByteBuffer payload = null;

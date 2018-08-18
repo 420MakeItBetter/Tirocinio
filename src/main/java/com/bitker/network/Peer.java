@@ -5,7 +5,7 @@ package com.bitker.network;
 import com.bitker.Main;
 import com.bitker.eventservice.EventService;
 import com.bitker.eventservice.events.PeerStateChangedEvent;
-import com.bitker.messages.SerializedMessage;
+import com.bitkermessage.client.messages.messages.SerializedMessage;
 
 import java.io.IOException;
 import java.net.InetAddress;

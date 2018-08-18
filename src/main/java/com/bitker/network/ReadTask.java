@@ -1,10 +1,10 @@
 package com.bitker.network;
 
 import com.bitker.Main;
-import com.bitker.bitio.LittleEndianInputStream;
 import com.bitker.eventservice.EventService;
 import com.bitker.eventservice.events.MessageReceivedEvent;
-import com.bitker.messages.*;
+import com.bitkermessage.client.messages.bitio.LittleEndianInputStream;
+import com.bitkermessage.client.messages.messages.*;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;

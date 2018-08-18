@@ -6,16 +6,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="Bitcoin-Cryptography-Library" />
-        <module name="BitKer" />
-        <module name="controller" />
+        <module name="BitKer-core" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="Bitcoin-Cryptography-Library" target="1.8" />
-      <module name="BitKer" target="1.8" />
-      <module name="controller" target="1.5" />
-      <module name="message-protocol" target="1.8" />
+      <module name="BitKer-core" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

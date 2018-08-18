@@ -1,10 +1,10 @@
 package com.bitker.network;
 
-import com.bitker.messages.PeerAddress;
-import com.bitker.messages.Version;
 import com.bitker.utils.BitConstants;
 import com.bitker.Main;
 import com.bitker.protocol.Connect;
+import com.bitkermessage.client.messages.messages.PeerAddress;
+import com.bitkermessage.client.messages.messages.Version;
 
 import java.io.IOException;
 import java.net.InetAddress;

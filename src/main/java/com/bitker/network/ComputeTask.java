@@ -1,10 +1,10 @@
 package com.bitker.network;
 
-import com.bitker.messages.*;
 import com.bitker.utils.BitConstants;
 import com.bitker.Main;
 import com.bitker.protocol.Connect;
 import com.bitker.protocol.KeepAlive;
+import com.bitkermessage.client.messages.messages.*;
 
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;

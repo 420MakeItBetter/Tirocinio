@@ -1,11 +1,11 @@
 package com.bitker.protocol;
 
-import com.bitker.messages.*;
 import com.bitker.utils.BitConstants;
 import com.bitker.Main;
 import com.bitker.network.ConnectTask;
 import com.bitker.network.Peer;
 import com.bitker.utils.IOUtils;
+import com.bitkermessage.client.messages.messages.*;
 
 import java.io.IOException;
 import java.net.InetAddress;

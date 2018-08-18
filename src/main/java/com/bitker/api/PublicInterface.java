@@ -183,7 +183,7 @@ import java.util.concurrent.Executors;
  *
  * newconnection id 7:
  *
- * in response of a connection request, indicates that a new peer has success   fully connect to the listener.
+ * in response of a connection request, indicates that a new peer has successfully connected to the listener.
  * the payload is made of
  * byte [16] ip: the representation of the ip of the peer
  * 1 byte which indicates who started the connection:
@@ -197,7 +197,20 @@ import java.util.concurrent.Executors;
  * byte [16] ip: the representation of the ip of the peer who the message has been sent
  * char [12] the type of the message sent.
  *
+ * Api version 1.1.1
  *
+ * new responses:
+ *
+ * peerstate id 9:
+ *
+ * in response to a lfrom and sendTo request this message is sent immediately after a message of lfrom or sendTo is received
+ * by the listener and inform the external client of the state of the peers
+ *
+ * byte [16] ip: the representation of the ip of the peer observed
+ * byte state: the current state of the peer at the moment of the request
+ * 0 -> CLOSED and an attempt to connect will be made to the client
+ * 1 -> HANDSHAKE
+ * 2 -> OPEN
  *
  */
 public class PublicInterface implements Runnable {
@@ -237,6 +250,7 @@ public class PublicInterface implements Runnable {
             {
                 selector.selectedKeys().clear();
                 selector.select();
+                System.out.println("Interface woken up");
                 for(SelectionKey k : selector.selectedKeys())
                 {
                     if(k.isAcceptable())
@@ -245,7 +259,8 @@ public class PublicInterface implements Runnable {
                         SocketChannel skt = srv.accept();
                         skt.configureBlocking(false);
                         System.out.println("nuova connessione");
-                        skt.register(selector,SelectionKey.OP_READ,new ApiClientData(skt));
+                        ApiClientData data = new ApiClientData(skt);
+                        data.setKey(skt.register(selector,SelectionKey.OP_READ,data));
                     }
                     else if(k.isReadable())
                     {

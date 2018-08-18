@@ -48,11 +48,12 @@ public class BitConstants {
      * list of the DNS server where the client can request IP address of peers
      */
     public static String [] DNS = new String [] {
-                                                    "bitseed.xf2.org",
-                                                    "dnsseed.bluematt.me",
-                                                    "seed.bitcoin.sipa.be",
-                                                    "dnsseed.bitcoin.dashjr.org",
-                                                    "seed.bitcoinstats.com"
+            "seed.bitcoin.sipa.be",
+            "dnsseed.bluematt.me",
+            "dnsseed.bitcoin.dashjr.org",
+            "seed.bitcoinstats.com",
+            "seed.bitcoin.jonasschnelli.ch",
+            "seed.btc.petertodd.org"
                                                 };
 
 

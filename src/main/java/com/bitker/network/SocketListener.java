@@ -1,12 +1,12 @@
 package com.bitker.network;
 
 
-import com.bitker.messages.SerializedMessage;
 import com.bitker.utils.BitConstants;
 import com.bitker.Main;
 import com.bitker.eventservice.EventService;
 import com.bitker.eventservice.events.ConnectedEvent;
 import com.bitker.eventservice.events.MessageSentEvent;
+import com.bitkermessage.client.messages.messages.SerializedMessage;
 
 
 import java.io.IOException;

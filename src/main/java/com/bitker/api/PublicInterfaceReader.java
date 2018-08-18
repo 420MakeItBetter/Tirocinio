@@ -99,7 +99,7 @@ public class PublicInterfaceReader implements Runnable {
                     {
                         msg = ByteBuffer.allocate(4+4+8+16+1);
                         msg.putInt(4+8+16+1);
-                        msg.putInt(5);
+                        msg.putInt(9);
                         msg.putLong(id);
                         if(Main.peers.containsKey(s))
                         {
@@ -164,7 +164,7 @@ public class PublicInterfaceReader implements Runnable {
                     EventService.getInstance().subscribe(PeerStateChangedEvent.class,filter,sub);
                     msg = ByteBuffer.allocate(4+4+8+16+1);
                     msg.putInt(4+8+16+1);
-                    msg.putInt(5);
+                    msg.putInt(9);
                     msg.putLong(id);
                     if(Main.peers.containsKey(s))
                     {
@@ -178,17 +178,41 @@ public class PublicInterfaceReader implements Runnable {
                         {
                             case CLOSE:
                                 msg.put((byte) 0);
-                                Connect.connect(p.getAddress(),8333,p);
-                                break;
-                            case HANDSHAKE:
-                                msg.put((byte) 1);
-                                break;
-                            case OPEN:
-                                msg.put((byte) 2);
+                                sub = new ConnectSubscriber();
+                                sub.id = id;
+                                sub.data = data;
                                 ByteBuffer header = ByteBuffer.allocate(24);
                                 while(header.hasRemaining())
                                     header.put(this.msg.get());
                                 ByteBuffer payload = ByteBuffer.allocate(this.msg.remaining());
+                                payload.put(this.msg);
+                                ((ConnectSubscriber) sub).header = header;
+                                ((ConnectSubscriber) sub).payload = payload;
+                                EventService.getInstance().subscribe(ConnectedEvent.class,filter,sub);
+                                EventService.getInstance().subscribe(NotConnectedEvent.class,filter,sub);
+                                Connect.connect(p.getAddress(),8333,p);
+                                break;
+                            case HANDSHAKE:
+                                msg.put((byte) 1);
+                                sub = new PeerStateOpenedSubscriber();
+                                sub.id = id;
+                                sub.data = data;
+                                header = ByteBuffer.allocate(24);
+                                while(header.hasRemaining())
+                                    header.put(this.msg.get());
+                                payload = ByteBuffer.allocate(this.msg.remaining());
+                                payload.put(this.msg);
+                                ((PeerStateOpenedSubscriber) sub).header = header;
+                                ((PeerStateOpenedSubscriber) sub).payload = payload;
+                                filter = new StateFilter(PeerState.OPEN);
+                                EventService.getInstance().subscribe(PeerStateChangedEvent.class,filter,sub);
+                                break;
+                            case OPEN:
+                                msg.put((byte) 2);
+                                header = ByteBuffer.allocate(24);
+                                while(header.hasRemaining())
+                                    header.put(this.msg.get());
+                                payload = ByteBuffer.allocate(this.msg.remaining());
                                 payload.put(this.msg);
                                 ProtocolUtil.sendMessage(header,payload,p.getSocket(),p,id);
                         }
@@ -197,6 +221,18 @@ public class PublicInterfaceReader implements Runnable {
                     {
                         Peer p = new Peer(InetAddress.getByName(s),8333);
                         Main.peers.put(s,p);
+                        sub = new ConnectSubscriber();
+                        sub.id = id;
+                        sub.data = data;
+                        ByteBuffer header = ByteBuffer.allocate(24);
+                        while(header.hasRemaining())
+                            header.put(this.msg.get());
+                        ByteBuffer payload = ByteBuffer.allocate(this.msg.remaining());
+                        payload.put(this.msg);
+                        ((ConnectSubscriber) sub).header = header;
+                        ((ConnectSubscriber) sub).payload = payload;
+                        EventService.getInstance().subscribe(ConnectedEvent.class,filter,sub);
+                        EventService.getInstance().subscribe(NotConnectedEvent.class,filter,sub);
                         Connect.connect(p.getAddress(),8333,p);
                         if(p.getAddress().getAddress().length == 4)
                             msg.put(new byte[]{(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,
@@ -206,12 +242,6 @@ public class PublicInterfaceReader implements Runnable {
                         msg.put((byte) 0);
                     }
                     data.addMsg(msg);
-
-                    sub = new ConnectSubscriber();
-                    sub.id = id;
-                    sub.data = data;
-                    EventService.getInstance().subscribe(ConnectedEvent.class,filter,sub);
-                    EventService.getInstance().subscribe(NotConnectedEvent.class,filter,sub);
                     break;
                 case 4:
 

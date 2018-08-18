@@ -1,12 +1,12 @@
 package com.bitker.protocol;
 
-import com.bitker.bitio.LittleEndianOutputStream;
-import com.bitker.messages.Message;
-import com.bitker.messages.SerializedMessage;
 import com.bitker.utils.BitConstants;
 import com.bitker.Main;
 import com.bitker.network.Peer;
 import com.bitker.utils.IOUtils;
+import com.bitkermessage.client.messages.bitio.LittleEndianOutputStream;
+import com.bitkermessage.client.messages.messages.Message;
+import com.bitkermessage.client.messages.messages.SerializedMessage;
 import io.nayuki.bitcoin.crypto.Sha256;
 
 import java.io.IOException;
