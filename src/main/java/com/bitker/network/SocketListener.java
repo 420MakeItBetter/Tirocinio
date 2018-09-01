@@ -1,11 +1,13 @@
 package com.bitker.network;
 
 
+import com.bitker.protocol.ProtocolUtil;
 import com.bitker.utils.BitConstants;
 import com.bitker.Main;
 import com.bitker.eventservice.EventService;
 import com.bitker.eventservice.events.ConnectedEvent;
 import com.bitker.eventservice.events.MessageSentEvent;
+import com.bitker.utils.IOUtils;
 import com.bitkermessage.client.messages.messages.SerializedMessage;
 
 
@@ -61,8 +63,8 @@ public class SocketListener implements Runnable {
             Main.openedFiles.incrementAndGet();
             skt.setOption(StandardSocketOptions.SO_REUSEADDR,true);
             skt.configureBlocking(false);
-            //skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
-            skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),8333));
+            skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
+            //skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),8333));
             skt.register(selector,SelectionKey.OP_ACCEPT);
             System.out.println("Socket creato");
         } catch (IOException e)
@@ -236,6 +238,8 @@ public class SocketListener implements Runnable {
                 {
                     p.poolMsg();
                 }
+                else
+                    return;
                 if (p.hasNoPendingMessage())
                     addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
 
@@ -247,6 +251,8 @@ public class SocketListener implements Runnable {
                 {
                     p.poolMsg();
                 }
+                else
+                    return;
                 if (p.hasNoPendingMessage())
                     addChannel(skt, key.interestOps() & ~SelectionKey.OP_WRITE, p);
             }

@@ -29,7 +29,7 @@
         <dependency>
             <groupId>com.github.MFranceschi6</groupId>
             <artifactId>Bitker-message</artifactId>
-            <version>1.3.2</version>
+            <version>1.4</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains</groupId>

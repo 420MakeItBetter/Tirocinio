@@ -225,8 +225,8 @@ public class PublicInterface implements Runnable {
             selector = Selector.open();
             srv = ServerSocketChannel.open();
             srv.setOption(StandardSocketOptions.SO_REUSEADDR,true);
-            //srv.bind(new InetSocketAddress(InetAddress.getLocalHost(),1994));
-            srv.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),1994));
+            srv.bind(new InetSocketAddress(InetAddress.getLocalHost(),1994));
+            //srv.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),1994));
             srv.configureBlocking(false);
             srv.register(selector, SelectionKey.OP_ACCEPT);
             ex = Executors.newCachedThreadPool();

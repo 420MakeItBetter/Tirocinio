@@ -3,6 +3,8 @@ package com.bitker.network;
 import com.bitker.Main;
 import com.bitker.eventservice.EventService;
 import com.bitker.eventservice.events.MessageReceivedEvent;
+import com.bitker.eventservice.events.MessageSentEvent;
+import com.bitker.utils.BitConstants;
 import com.bitkermessage.client.messages.bitio.LittleEndianInputStream;
 import com.bitkermessage.client.messages.messages.*;
 
@@ -50,7 +52,6 @@ public class ReadTask extends Task{
         msg.setCommand(new String(command).trim());
         msg.getHeader().position(20);
         msg.setChecksum(msg.getHeader().getInt());
-
 
         Message m = createMessage(msg);
         if (m != null)
