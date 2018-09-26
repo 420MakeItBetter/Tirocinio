@@ -141,6 +141,7 @@ public class ComputeTask extends Task {
         p.setTimestamp((int) (System.currentTimeMillis() / BitConstants.TIME));
         p.setPort(m.getYourAddress().getPort());
         p.setAgent(m.getUserAgent());
+        p.setTheirVersion(m.getVersion());
         try
         {
             Connect.sendVerAck(ack,skt,p);

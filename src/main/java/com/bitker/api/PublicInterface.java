@@ -212,6 +212,39 @@ import java.util.concurrent.Executors;
  * 1 -> HANDSHAKE
  * 2 -> OPEN
  *
+ * Api version 1.2
+ *
+ * Requests:
+ *
+ * list message now can have a payload which specify the list of peer ip when want to retrieve information from the listener
+ *
+ * if the list message is sent with no payload you will get a response with all the information about all the connected peers
+ *
+ * if you have a payload you will receive back the information about the peers you requested.
+ *
+ * int n: the number of peer to get information from.
+ * byte [n*16]: array of byte which are the ip of the peer to retrieve information from
+ *
+ * Responses:
+ *
+ * peer list id 4:
+ *
+ * the peer structure now has some additional information:
+ *
+ *  -- OLD FIELDS --
+ *  16 byte which is the ip address of the peer.
+ *  1 byte which is the service of the peer
+ *  1 byte that indicates who started the connection:
+ *  0 -> the listener connected to the peer,
+ *  1 -> the peer connected to the listener.
+ *  int l: length of the peer agent.
+ *  char [l] agent: the user agent of the peer
+ *  -- NEW FIELDS --
+ *  int their version which indicates the version of protocol the peer is running
+ *  int our version which indicates the version we sent during the handshake procedure
+ *
+ *
+ *
  */
 public class PublicInterface implements Runnable {
 
@@ -225,8 +258,8 @@ public class PublicInterface implements Runnable {
             selector = Selector.open();
             srv = ServerSocketChannel.open();
             srv.setOption(StandardSocketOptions.SO_REUSEADDR,true);
-            srv.bind(new InetSocketAddress(InetAddress.getLocalHost(),1994));
-            //srv.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),1994));
+            //srv.bind(new InetSocketAddress(InetAddress.getLocalHost(),1994));
+            srv.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),1994));
             srv.configureBlocking(false);
             srv.register(selector, SelectionKey.OP_ACCEPT);
             ex = Executors.newCachedThreadPool();
@@ -258,18 +291,20 @@ public class PublicInterface implements Runnable {
                         ServerSocketChannel srv = (ServerSocketChannel) k.channel();
                         SocketChannel skt = srv.accept();
                         skt.configureBlocking(false);
-                        System.out.println("nuova connessione");
+                        System.out.println("for accepting a new connection from: "+skt.getRemoteAddress());
                         ApiClientData data = new ApiClientData(skt);
                         data.setKey(skt.register(selector,SelectionKey.OP_READ,data));
                     }
                     else if(k.isReadable())
                     {
                         ApiClientData data = (ApiClientData) k.attachment();
+                        System.out.println("for reading a new message from "+ ((SocketChannel) k.channel()).getRemoteAddress());
                         data.read();
                     }
                     else if(k.isWritable())
                     {
                         ApiClientData data = (ApiClientData) k.attachment();
+                        System.out.println("for writing a new message to "+ ((SocketChannel) k.channel()).getRemoteAddress());
                         data.write();
                     }
                 }

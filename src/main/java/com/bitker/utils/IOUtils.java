@@ -2,6 +2,8 @@ package com.bitker.utils;
 
 import org.jetbrains.annotations.Contract;
 
+import java.net.InetAddress;
+
 /**
  * This class contains some useful method
  * @author Matteo Franceschi mfranceschi94@gmail.com
@@ -33,6 +35,15 @@ public class IOUtils {
 
     public static int byteArrayToInt(byte[] bytes) {
         return bytes[0] << 24 | (bytes[1] & 0xFF) << 16 | (bytes[2] & 0xFF) << 8 | (bytes[3] & 0xFF);
+    }
+
+    public static byte [] addressToByte(InetAddress addr){
+        if(addr.getAddress().length == 4)
+            return new byte[]{(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,
+                    (byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,
+                    (byte)0x00,(byte)0xFF,(byte)0xFF,addr.getAddress()[0],addr.getAddress()[1],addr.getAddress()[2],addr.getAddress()[3]};
+        else
+            return addr.getAddress();
     }
 
 }

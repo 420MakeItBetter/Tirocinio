@@ -29,6 +29,7 @@ public class Peer implements Comparable<Peer>{
     private boolean newVersion;
     private long lastMessage;
     private boolean in;
+    private int theirVersion;
     private ConcurrentLinkedQueue<SerializedMessage> pendingMessages;
     private SerializedMessage incompleteMsg;
     private PeerState state;
@@ -234,6 +235,14 @@ public class Peer implements Comparable<Peer>{
 
     public void setConnectionTime(long connectionTime) {
         this.connectionTime = connectionTime;
+    }
+
+    public int theirVersion() {
+        return theirVersion;
+    }
+
+    public void setTheirVersion(int version) {
+        theirVersion = version;
     }
 }
 

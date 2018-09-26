@@ -71,7 +71,10 @@ public class EventService {
         }
         for(Subscription s : tmp)
             if(s.eventType.isAssignableFrom(e.getClass()) && (s.filter == null || s.filter.apply(e)))
-                    s.subscriber.inform(e);
+            {
+                System.out.println("found a subscriber for event"+e.toString());
+                s.subscriber.inform(e);
+            }
     }
 
 }

@@ -22,7 +22,10 @@ public class PeerStateChangedSubscriber extends Subscriber {
                 msg = ByteBuffer.allocate(4 + 4 + 8 + 16 + 1 + 1);
             else
                 msg = ByteBuffer.allocate(4+4+8+16+1+1+8);
-            msg.putInt(4 + 8 + 16 + 1 + 1);
+            if(e.p.getState() != PeerState.CLOSE)
+                msg.putInt(4 + 8 + 16 + 1 + 1);
+            else
+                msg.putInt(4 + 8 + 16 + 1 + 1 + 8);
             msg.putInt(5);
             msg.putLong(id);
             if (e.p.getAddress().getAddress().length == 4)

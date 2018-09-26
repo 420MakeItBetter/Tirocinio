@@ -10,7 +10,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: com.github.MFranceschi6:Bitcoin-Cryptography-Library:1.1" level="project" />
-    <orderEntry type="library" name="Maven: com.github.MFranceschi6:Bitker-message:1.4" level="project" />
+    <orderEntry type="library" name="Maven: com.github.MFranceschi6:Bitker-message:1.5.1" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains:annotations:15.0" level="project" />
   </component>
 </module>
