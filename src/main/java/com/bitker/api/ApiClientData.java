@@ -93,8 +93,7 @@ public class ApiClientData {
         }
         try
         {
-            System.out.println("Wrote: "+skt.write(msg));
-            System.out.println("last msg position: "+msg[msg.length - 1].position()+" of: "+msg[msg.length - 1].limit());
+            skt.write(msg);
             if(msg[msg.length - 1].position() == msg[msg.length - 1].limit())
                 queue.poll();
             if(queue.isEmpty())

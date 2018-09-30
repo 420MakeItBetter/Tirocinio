@@ -63,8 +63,8 @@ public class SocketListener implements Runnable {
             Main.openedFiles.incrementAndGet();
             skt.setOption(StandardSocketOptions.SO_REUSEADDR,true);
             skt.configureBlocking(false);
-            //skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
-            skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),8333));
+            skt.bind(new InetSocketAddress(InetAddress.getLocalHost(),8333));
+            //skt.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),8333));
             skt.register(selector,SelectionKey.OP_ACCEPT);
             System.out.println("Socket creato");
         } catch (IOException e)

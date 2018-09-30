@@ -258,8 +258,8 @@ public class PublicInterface implements Runnable {
             selector = Selector.open();
             srv = ServerSocketChannel.open();
             srv.setOption(StandardSocketOptions.SO_REUSEADDR,true);
-            //srv.bind(new InetSocketAddress(InetAddress.getLocalHost(),1994));
-            srv.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),1994));
+            srv.bind(new InetSocketAddress(InetAddress.getLocalHost(),1994));
+            //srv.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),1994));
             srv.configureBlocking(false);
             srv.register(selector, SelectionKey.OP_ACCEPT);
             ex = Executors.newCachedThreadPool();
@@ -291,20 +291,17 @@ public class PublicInterface implements Runnable {
                         ServerSocketChannel srv = (ServerSocketChannel) k.channel();
                         SocketChannel skt = srv.accept();
                         skt.configureBlocking(false);
-                        System.out.println("for accepting a new connection from: "+skt.getRemoteAddress());
                         ApiClientData data = new ApiClientData(skt);
                         data.setKey(skt.register(selector,SelectionKey.OP_READ,data));
                     }
                     else if(k.isReadable())
                     {
                         ApiClientData data = (ApiClientData) k.attachment();
-                        System.out.println("for reading a new message from "+ ((SocketChannel) k.channel()).getRemoteAddress());
                         data.read();
                     }
                     else if(k.isWritable())
                     {
                         ApiClientData data = (ApiClientData) k.attachment();
-                        System.out.println("for writing a new message to "+ ((SocketChannel) k.channel()).getRemoteAddress());
                         data.write();
                     }
                 }

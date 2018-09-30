@@ -29,6 +29,7 @@ public class List extends Handler {
                 for (int i = 0; i < number; i++)
                 {
                     byte[] addr = new byte[16];
+                    msg.get(addr);
                     peers.add(InetAddress.getByAddress(addr).getHostAddress());
                 }
             }
@@ -38,7 +39,9 @@ public class List extends Handler {
                 size = someList(peers,stream);
             else
                 size = allList(stream);
+            System.out.println(size);
             ByteBuffer message = ByteBuffer.wrap(stream.toByteArray());
+            System.out.println(message.capacity());
             ByteBuffer tmp = ByteBuffer.allocate(4+4+8+4);
             tmp.putInt(4+8+4+message.limit());
             tmp.putInt(4);

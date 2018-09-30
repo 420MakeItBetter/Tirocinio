@@ -14,8 +14,6 @@ public class MessageSentEvent implements Event {
     public MessageSentEvent(Peer p, SerializedMessage msg){
         this.p = p;
         this.msg = msg;
-        if(msg.getCommand() != "inv")
-            System.out.println("MessageSentEvent from: "+p.getAddress()+", sent "+msg.getCommand());
     }
 
 }

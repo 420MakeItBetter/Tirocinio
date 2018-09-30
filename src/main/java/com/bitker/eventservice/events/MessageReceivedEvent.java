@@ -14,7 +14,5 @@ public class MessageReceivedEvent implements Event {
     public MessageReceivedEvent(Peer p, Message m) {
         this.p = p;
         this.m = m;
-        if(m.getCommand() == "getdata")
-            System.out.println("MessageReceivedEvent from: "+p.getAddress()+", received "+m.getCommand());
     }
 }
