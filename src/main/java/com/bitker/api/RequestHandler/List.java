@@ -87,7 +87,7 @@ public class List extends Handler {
     private void writePeer(Peer p,DataOutputStream stream) throws IOException {
         byte [] addr = IOUtils.addressToByte(p.getAddress());
         stream.write(addr);
-        stream.writeByte((int) p.getService());
+        stream.writeByte((byte) p.getService());
         stream.writeByte(p.isIn() ? (byte) 1 : (byte) 0);
         stream.writeInt(p.getAgent().length());
         stream.write(p.getAgent().getBytes());

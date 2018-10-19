@@ -78,6 +78,8 @@ public class ReadTask extends Task{
     private Message createMessage(SerializedMessage msg) throws IOException{
 
         Message message = null;
+        if(msg.getCommand().toLowerCase().equals("headers"))
+            System.out.println("Header Received");
         switch (msg.getCommand().toLowerCase())
         {
             case "addr" :

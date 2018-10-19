@@ -260,6 +260,7 @@ public class SocketListener implements Runnable {
         } catch (Exception e)
         {
             throw e;
+            p.close();
         }
     }
 

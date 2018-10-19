@@ -108,14 +108,8 @@ public class ApiClientData {
     public void addMsg(ByteBuffer... param) {
         for(ByteBuffer b : param)
             b.clear();
-        if(queue.isEmpty())
-        {
-
-            queue.add(param);
-            Main.publicInterface.registerChannel(skt, SelectionKey.OP_READ | SelectionKey.OP_WRITE,this);
-        }
-        else
-            queue.add(param);
+        queue.add(param);
+        Main.publicInterface.registerChannel(skt, SelectionKey.OP_READ | SelectionKey.OP_WRITE,this);
 
     }
 

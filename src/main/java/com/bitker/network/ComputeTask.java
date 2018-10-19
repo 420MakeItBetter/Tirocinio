@@ -47,8 +47,8 @@ public class ComputeTask extends Task {
             pingResponse((Ping) m);
         else if(m instanceof Address)
             saveAddressees((Address) m);
-        else if(m instanceof Inventory)
-            inventoryStat((Inventory) m);
+        //else if(m instanceof Inventory)
+        //    inventoryStat((Inventory) m);
         else if(m instanceof GetAddress)
             sendAddress();
 
