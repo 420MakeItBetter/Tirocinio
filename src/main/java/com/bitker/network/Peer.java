@@ -6,6 +6,7 @@ import com.bitker.Main;
 import com.bitker.eventservice.EventService;
 import com.bitker.eventservice.events.PeerStateChangedEvent;
 import com.bitkermessage.client.messages.messages.SerializedMessage;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -50,11 +51,11 @@ public class Peer implements Comparable<Peer>{
         connectionTime = 0;
     }
 
-    public void setAgent(String s){
+    void setAgent(String s){
         agent = s;
     }
 
-    public void setIn(boolean isIn){
+    void setIn(boolean isIn){
         in = isIn;
     }
 
@@ -66,15 +67,15 @@ public class Peer implements Comparable<Peer>{
         return agent;
     }
 
-    public void setTime(){
+    void setTime(){
         lastMessage = System.currentTimeMillis();
     }
 
-    public long getTime(){
+    long getTime(){
         return lastMessage;
     }
 
-    public void setSocket(SocketChannel skt){
+    void setSocket(SocketChannel skt){
         this.skt = skt;
     }
 
@@ -96,7 +97,7 @@ public class Peer implements Comparable<Peer>{
         return state;
     }
 
-    public void setPeerState(PeerState state) {
+    void setPeerState(PeerState state) {
         if(state == this.state)
             return;
         PeerState old = this.state;
@@ -117,15 +118,15 @@ public class Peer implements Comparable<Peer>{
         pendingMessages.add(message);
     }
 
-    public SerializedMessage peekMsg() {
+    SerializedMessage peekMsg() {
         return pendingMessages.peek();
     }
 
-    public SerializedMessage poolMsg() {
+    SerializedMessage poolMsg() {
         return pendingMessages.poll();
     }
 
-    public boolean hasNoPendingMessage() {
+    boolean hasNoPendingMessage() {
         return pendingMessages.isEmpty();
     }
 
@@ -138,7 +139,7 @@ public class Peer implements Comparable<Peer>{
     }
 
 
-    public void setService(long service) {
+    void setService(long service) {
         this.service = service;
     }
 
@@ -146,7 +147,7 @@ public class Peer implements Comparable<Peer>{
         return service;
     }
 
-    public void setPort(int port) {
+    void setPort(int port) {
         this.port = port;
     }
 
@@ -155,7 +156,7 @@ public class Peer implements Comparable<Peer>{
     }
 
     @Override
-    public int compareTo(Peer o) {
+    public int compareTo(@NotNull Peer o) {
         int res = this.attempt - o.attempt;
         if(res == 0)
             res = o.timestamp - this.timestamp;
@@ -164,19 +165,12 @@ public class Peer implements Comparable<Peer>{
 
     @Override
     public boolean equals(Object obj) {
+        if(!obj.getClass().isAssignableFrom(Peer.class))
+            return false;
         Peer o = (Peer) obj;
         if(addr.getHostAddress().equals(o.getAddress().getHostAddress()))
-            if(port == o.getPort())
-                return true;
+            return port == o.getPort();
         return false;
-    }
-
-    public void incrementAttempt() {
-        attempt++;
-    }
-
-    public int getAttempt(){
-        return attempt;
     }
 
     @Override
@@ -221,11 +215,11 @@ public class Peer implements Comparable<Peer>{
         return attempt < 10;
     }
 
-    public void resetAttempt() {
+    void resetAttempt() {
         attempt = 0;
     }
 
-    public void setKey(SelectionKey key) {
+    void setKey(SelectionKey key) {
         this.key = key;
     }
 
@@ -233,7 +227,7 @@ public class Peer implements Comparable<Peer>{
         return connectionTime;
     }
 
-    public void setConnectionTime(long connectionTime) {
+    void setConnectionTime(long connectionTime) {
         this.connectionTime = connectionTime;
     }
 
@@ -241,7 +235,7 @@ public class Peer implements Comparable<Peer>{
         return theirVersion;
     }
 
-    public void setTheirVersion(int version) {
+    void setTheirVersion(int version) {
         theirVersion = version;
     }
 }

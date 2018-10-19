@@ -19,7 +19,7 @@ public class ComputeTask extends Task {
     private SocketChannel skt;
     private Message m;
 
-    public ComputeTask(SocketChannel skt, Peer p,Message m){
+    ComputeTask(SocketChannel skt, Peer p, Message m){
         this.skt = skt;
         this.p = p;
         this.m = m;
@@ -37,7 +37,7 @@ public class ComputeTask extends Task {
     }
 
     @Override
-    protected void doTask() throws IOException {
+    protected void doTask() {
         p.setTimestamp((int) (System.currentTimeMillis()/BitConstants.TIME));
         if(m instanceof VerAck)
             verackResponse();
@@ -50,18 +50,15 @@ public class ComputeTask extends Task {
         else if(m instanceof Inventory)
             inventoryStat((Inventory) m);
         else if(m instanceof GetAddress)
-            sendAddress((GetAddress) m);
+            sendAddress();
 
     }
 
-    private void sendAddress(GetAddress m) {
+    private void sendAddress() {
         try
         {
             Connect.sendAddresses(skt,p);
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        } catch (InterruptedException e)
+        } catch (IOException | InterruptedException e)
         {
             e.printStackTrace();
         }
@@ -89,7 +86,7 @@ public class ComputeTask extends Task {
                         Main.invStat.filtered_block.incrementAndGet();
                         break;
                 }
-            }catch (NullPointerException e)
+            }catch (Exception e)
             {
                 e.printStackTrace();
             }
@@ -99,7 +96,7 @@ public class ComputeTask extends Task {
         p.setPeerState(PeerState.OPEN);
     }
 
-    private void saveAddressees(Address m) throws IOException {
+    private void saveAddressees(Address m) {
         for(PeerAddress p : m.getAddresses())
         {
             if(!Main.peers.containsKey(p.getAddress().getHostAddress()))
@@ -129,8 +126,7 @@ public class ComputeTask extends Task {
         try
         {
             KeepAlive.sendPong(m,skt,p);
-        } catch (InterruptedException e)
-        {} catch (ClosedChannelException e)
+        } catch (InterruptedException | ClosedChannelException ignored)
         {}
     }
 
@@ -145,16 +141,12 @@ public class ComputeTask extends Task {
         try
         {
             Connect.sendVerAck(ack,skt,p);
-        } catch (ClosedChannelException e)
-        {} catch (InterruptedException e)
+        } catch (ClosedChannelException | InterruptedException ignored)
         {}
         try
         {
             Connect.sendGetAddress(skt,p);
-        } catch (ClosedChannelException e)
-        {
-            e.printStackTrace();
-        } catch (InterruptedException e)
+        } catch (ClosedChannelException | InterruptedException e)
         {
             e.printStackTrace();
         }

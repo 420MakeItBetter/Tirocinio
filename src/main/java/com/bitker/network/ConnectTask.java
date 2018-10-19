@@ -21,7 +21,7 @@ public class ConnectTask extends Task {
     public static AtomicInteger connections = new AtomicInteger(0);
 
 
-    SocketChannel skt;
+    private SocketChannel skt;
 
     public ConnectTask(Peer p){
         this.p = p;
@@ -41,7 +41,7 @@ public class ConnectTask extends Task {
         {
             if(skt != null)
                 skt.close();
-        } catch (IOException e1)
+        } catch (IOException ignored)
         {}
         p.close();
         EventService.getInstance().publish(new NotConnectedEvent(p));
@@ -55,7 +55,7 @@ public class ConnectTask extends Task {
         {
             if(p.getAddress().equals(InetAddress.getByName("131.114.88.218")))
                 return;
-        } catch (UnknownHostException e)
+        } catch (UnknownHostException ignored)
         {}
         //System.err.println(Thread.currentThread().getName()+"before open");
         skt = SocketChannel.open();

@@ -37,16 +37,22 @@ public class KeepAlive {
     }
 
     public static void sendPong(Ping msg,SocketChannel skt, Peer p) throws InterruptedException, ClosedChannelException {
-        Pong resp = new Pong();
-        resp.setNonce(msg.getNonce());
-        ByteBuffer header = ProtocolUtil.writeHeader(resp);
-        ByteBuffer payload = null;
         try
         {
-            payload = ProtocolUtil.writePayload(resp);
-            header.put(ProtocolUtil.getChecksum(payload));
-            ProtocolUtil.sendMessage(header,payload,skt,p);
-        } catch (IOException e)
+            Pong resp = new Pong();
+            resp.setNonce(msg.getNonce());
+            ByteBuffer header = ProtocolUtil.writeHeader(resp);
+            ByteBuffer payload = null;
+            try
+            {
+                payload = ProtocolUtil.writePayload(resp);
+                header.put(ProtocolUtil.getChecksum(payload));
+                ProtocolUtil.sendMessage(header, payload, skt, p);
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }catch (Exception e)
         {
             e.printStackTrace();
         }

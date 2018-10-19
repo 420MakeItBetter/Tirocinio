@@ -63,7 +63,7 @@ public class ReadTask extends Task{
             EventService.getInstance().publish(new MessageReceivedEvent(p,m));
         }
 
-        if(m instanceof Inventory)
+        /*if(m instanceof Inventory)
             if(r.nextInt(100) > 60)
             {
                 msg.getHeader().rewind();
@@ -71,6 +71,7 @@ public class ReadTask extends Task{
                 p.addMsg(msg);
                 Main.listener.addChannel(skt, SelectionKey.OP_WRITE | SelectionKey.OP_READ, p);
             }
+            */
     }
 
 

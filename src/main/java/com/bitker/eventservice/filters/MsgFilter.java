@@ -11,8 +11,8 @@ import java.util.Set;
  */
 public class MsgFilter implements Filter {
 
-    Set<String> msgtypes;
-    long id;
+    private Set<String> msgtypes;
+    private long id;
 
     public MsgFilter(Set<String> msgtypes) {
         this.msgtypes = msgtypes;

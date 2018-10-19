@@ -154,13 +154,13 @@ public class ClientHandler implements Runnable {
                 builder = new StringBuilder();
             }
         }
-        catch(IOException e)
-        {}
+        catch(Exception e)
+        { e.printStackTrace();}
         try
         {
             s.close();
         }catch (IOException e1)
-        {}
+        { e1.printStackTrace();}
         Main.openedFiles.decrementAndGet();
     }
 }

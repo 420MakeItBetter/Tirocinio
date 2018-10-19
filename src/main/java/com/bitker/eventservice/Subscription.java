@@ -9,11 +9,11 @@ import com.bitker.eventservice.subscribers.Subscriber;
  */
 public class Subscription<T extends Class<? extends Event>>{
 
-    public T eventType;
+    T eventType;
     public Filter filter;
     public Subscriber subscriber;
 
-    public Subscription(T eventType, Filter filter, Subscriber subscriber){
+    Subscription(T eventType, Filter filter, Subscriber subscriber){
         this.eventType = eventType;
         this.filter = filter;
         this.subscriber = subscriber;

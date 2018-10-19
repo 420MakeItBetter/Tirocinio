@@ -63,10 +63,7 @@ public class MessageReceivedSubscriber extends Subscriber {
                 }
 
             }
-        } catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        } catch (IOException e)
+        } catch (InterruptedException | IOException e)
         {
             e.printStackTrace();
         }

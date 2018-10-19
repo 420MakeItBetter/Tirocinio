@@ -26,7 +26,7 @@ public class SelectorParam {
     }
 
     public Peer getInterest(){
-        return (Peer) o;
+        return  o;
     }
 
 }

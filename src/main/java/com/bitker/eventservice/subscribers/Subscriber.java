@@ -15,6 +15,8 @@ public abstract class Subscriber {
 
     @Override
     public boolean equals(Object obj) {
+        if(!obj.getClass().isAssignableFrom(Subscriber.class))
+            return false;
         Subscriber o = (Subscriber) obj;
         return o.data.equals(data) && o.id == id;
 

@@ -9,7 +9,7 @@ import java.util.Set;
  */
 public class PeerFilter implements Filter {
 
-    Set<String> peers;
+    private Set<String> peers;
 
     public PeerFilter(Set<String> peers) {
         this.peers = peers;

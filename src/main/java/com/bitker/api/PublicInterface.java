@@ -1,10 +1,12 @@
 package com.bitker.api;
 
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.channels.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -248,67 +250,98 @@ import java.util.concurrent.Executors;
  */
 public class PublicInterface implements Runnable {
 
-    Selector selector;
+    private Selector selector;
     Executor ex;
-    ServerSocketChannel srv;
+	private ConcurrentLinkedQueue<PublicInterfaceSelectorParam> queue;
 
     public PublicInterface(){
         try
         {
             selector = Selector.open();
-            srv = ServerSocketChannel.open();
+			ServerSocketChannel srv = ServerSocketChannel.open();
             srv.setOption(StandardSocketOptions.SO_REUSEADDR,true);
-            srv.bind(new InetSocketAddress(InetAddress.getLocalHost(),1994));
-            //srv.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),1994));
+            //srv.bind(new InetSocketAddress(InetAddress.getLocalHost(),1994));
+            srv.bind(new InetSocketAddress(InetAddress.getByName("131.114.2.151"),1994));
             srv.configureBlocking(false);
             srv.register(selector, SelectionKey.OP_ACCEPT);
             ex = Executors.newCachedThreadPool();
+            queue = new ConcurrentLinkedQueue<>();
         } catch (IOException e)
         {
             e.printStackTrace();
         }
     }
 
-    public void registerChannel(SocketChannel skt,int interest,ApiClientData attachment) throws ClosedChannelException {
-        attachment.setKey(skt.register(selector,interest,attachment));
+    void registerChannel(SocketChannel skt, int interest, ApiClientData attachment){
+        queue.add(new PublicInterfaceSelectorParam(skt,interest,attachment));
         selector.wakeup();
     }
 
     @Override
     public void run() {
 
-        while (true)
-        {
-            try
-            {
-                selector.selectedKeys().clear();
-                selector.select();
-                System.out.println("Interface woken up");
-                for(SelectionKey k : selector.selectedKeys())
-                {
-                    if(k.isAcceptable())
-                    {
-                        ServerSocketChannel srv = (ServerSocketChannel) k.channel();
-                        SocketChannel skt = srv.accept();
-                        skt.configureBlocking(false);
-                        ApiClientData data = new ApiClientData(skt);
-                        data.setKey(skt.register(selector,SelectionKey.OP_READ,data));
-                    }
-                    else if(k.isReadable())
-                    {
-                        ApiClientData data = (ApiClientData) k.attachment();
-                        data.read();
-                    }
-                    else if(k.isWritable())
-                    {
-                        ApiClientData data = (ApiClientData) k.attachment();
-                        data.write();
-                    }
-                }
-            } catch (IOException e)
-            {
-                e.printStackTrace();
-            }
+		while (true)
+		{
+			try
+			{
+				selector.selectedKeys().clear();
+				selector.select();
+				for(SelectionKey k : selector.selectedKeys())
+				{
+					if(k.isAcceptable())
+					{
+						ServerSocketChannel srv = (ServerSocketChannel) k.channel();
+						SocketChannel skt = null;
+						try
+						{
+							skt = srv.accept();
+							skt.setOption(StandardSocketOptions.SO_REUSEADDR,true);
+							skt.configureBlocking(false);
+							ApiClientData data = new ApiClientData(skt);
+							data.setKey(skt.register(selector,SelectionKey.OP_READ,data));
+						}catch (IOException e)
+						{
+							try{
+								if (skt != null)
+								{
+									skt.close();
+								}
+							}catch (IOException e1)
+							{
+								e1.printStackTrace();
+							}
+							e.printStackTrace();
+						}
+
+					}
+					else if(k.isReadable())
+					{
+						ApiClientData data = (ApiClientData) k.attachment();
+						data.read();
+					}
+					else if(k.isWritable())
+					{
+						ApiClientData data = (ApiClientData) k.attachment();
+						data.write();
+					}
+				}
+
+				while (!queue.isEmpty())
+				{
+					PublicInterfaceSelectorParam param = queue.poll();
+					try
+					{
+						param.register(selector);
+					} catch (ClosedChannelException e)
+					{
+						ApiClientData data = param.getAttachment();
+						data.close();
+					}
+				}
+			} catch (Exception e)
+			{
+				e.printStackTrace();
+			}
         }
     }
 }

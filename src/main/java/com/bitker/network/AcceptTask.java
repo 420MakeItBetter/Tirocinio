@@ -14,9 +14,9 @@ import java.nio.channels.*;
  */
 public class AcceptTask implements Runnable{
 
-    SocketChannel skt;
+    private SocketChannel skt;
 
-    public AcceptTask(SocketChannel skt) {
+    AcceptTask(SocketChannel skt) {
         Main.listener.acceptNumber.incrementAndGet();
         this.skt = skt;
     }
@@ -28,7 +28,7 @@ public class AcceptTask implements Runnable{
         {
             skt.setOption(StandardSocketOptions.SO_REUSEADDR,true);
             skt.configureBlocking(false);
-            Peer peer = null;
+            Peer peer;
             if(Main.peers.containsKey(skt.socket().getInetAddress().getHostAddress()))
             {
                 peer = Main.peers.get(skt.socket().getInetAddress().getHostAddress());

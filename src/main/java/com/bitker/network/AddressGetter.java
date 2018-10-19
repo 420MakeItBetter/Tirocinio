@@ -12,9 +12,9 @@ import java.nio.channels.SocketChannel;
  */
 public class AddressGetter implements Runnable {
 
-    SocketChannel skt;
-    Peer p;
-    int time;
+    private SocketChannel skt;
+    private Peer p;
+    private int time;
 
     public AddressGetter(SocketChannel skt, Peer p) {
         Main.listener.addressGetter.incrementAndGet();
@@ -34,10 +34,7 @@ public class AddressGetter implements Runnable {
     public void run() {
         try{
             Connect.sendGetAddress(skt, p);
-        } catch (ClosedChannelException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e)
-        {
+        } catch (ClosedChannelException | InterruptedException e) {
             e.printStackTrace();
         }
         Main.listener.addressGetter.decrementAndGet();

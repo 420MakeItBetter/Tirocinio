@@ -10,6 +10,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -21,19 +22,19 @@ public class ApiClientData {
     private ByteBuffer msgLen;
     private ByteBuffer msg;
     private SocketChannel skt;
-    private LinkedBlockingQueue<ByteBuffer []> queue;
+    private ConcurrentLinkedQueue<ByteBuffer []> queue;
     private Set<Long> ids;
     private SelectionKey key;
 
     ApiClientData(SocketChannel skt){
         length = -1;
         msgLen = ByteBuffer.allocate(4);
-        queue = new LinkedBlockingQueue<>();
+        queue = new ConcurrentLinkedQueue<>();
         this.skt = skt;
         ids = new HashSet<>();
     }
 
-    public void read(){
+    void read(){
         try
         {
             if (length == -1)
@@ -45,6 +46,7 @@ public class ApiClientData {
                 msgLen.clear();
                 length = msgLen.getInt();
                 msgLen.clear();
+                System.out.println("APICLIENTDATA: reading message of "+length+"byte");
                 msg = ByteBuffer.allocate(length);
             }
             if (skt.read(msg) == -1)
@@ -62,15 +64,16 @@ public class ApiClientData {
         }
     }
 
-    private void close() {
+    public void close() {
         try
         {
             skt.close();
-            key.cancel();
+
         } catch (IOException e)
         {
             e.printStackTrace();
         }
+        key.cancel();
         for(Long id : ids)
         {
 
@@ -78,24 +81,21 @@ public class ApiClientData {
         }
     }
 
-    public void write() {
+    void write() {
         ByteBuffer [] msg = queue.peek();
         if(msg == null)
         {
-            try
-            {
-                Main.publicInterface.registerChannel(skt,SelectionKey.OP_READ,this);
-            } catch (ClosedChannelException e)
-            {
-                e.printStackTrace();
-            }
+            Main.publicInterface.registerChannel(skt,SelectionKey.OP_READ,this);
             return;
         }
         try
         {
             skt.write(msg);
-            if(msg[msg.length - 1].position() == msg[msg.length - 1].limit())
+            if(msg[msg.length - 1].position() == msg[msg.length - 1].capacity())
+            {
+                System.out.println("Removed");
                 queue.poll();
+            }
             if(queue.isEmpty())
                 Main.publicInterface.registerChannel(skt,SelectionKey.OP_READ, this);
         } catch (IOException e)
@@ -108,22 +108,22 @@ public class ApiClientData {
     public void addMsg(ByteBuffer... param) {
         for(ByteBuffer b : param)
             b.clear();
-        queue.add(param);
-        try
+        if(queue.isEmpty())
         {
+
+            queue.add(param);
             Main.publicInterface.registerChannel(skt, SelectionKey.OP_READ | SelectionKey.OP_WRITE,this);
-        } catch (IOException e)
-        {
-            close();
-            System.out.println("channel chiuso");
         }
+        else
+            queue.add(param);
+
     }
 
-    public synchronized void addId(long id) {
+    synchronized void addId(long id) {
         ids.add(id);
     }
 
-    public void setKey(SelectionKey key) {
+    void setKey(SelectionKey key) {
         this.key = key;
     }
 }
