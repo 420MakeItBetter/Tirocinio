@@ -250,7 +250,7 @@ import java.util.concurrent.Executors;
  */
 public class PublicInterface implements Runnable {
 
-    private Selector selector;
+    Selector selector;
     Executor ex;
 	private ConcurrentLinkedQueue<PublicInterfaceSelectorParam> queue;
 
@@ -285,7 +285,11 @@ public class PublicInterface implements Runnable {
 			try
 			{
 				selector.selectedKeys().clear();
-				selector.select();
+				if (selector.keys().size() > 1) {
+					selector.select(5000);
+				} else {
+					selector.select();
+				}
 				for(SelectionKey k : selector.selectedKeys())
 				{
 					if(k.isAcceptable())
@@ -325,7 +329,10 @@ public class PublicInterface implements Runnable {
 						data.write();
 					}
 				}
-
+				selector.keys().forEach(k -> {
+					if(k.attachment() instanceof ApiClientData)
+						((ApiClientData) k.attachment()).checkTimeout();
+				});
 				while (!queue.isEmpty())
 				{
 					PublicInterfaceSelectorParam param = queue.poll();

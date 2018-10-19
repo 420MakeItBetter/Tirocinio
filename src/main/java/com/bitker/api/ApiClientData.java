@@ -25,6 +25,7 @@ public class ApiClientData {
     private ConcurrentLinkedQueue<ByteBuffer []> queue;
     private Set<Long> ids;
     private SelectionKey key;
+    private long lastTimeSeen;
 
     ApiClientData(SocketChannel skt){
         length = -1;
@@ -35,6 +36,7 @@ public class ApiClientData {
     }
 
     void read(){
+        lastTimeSeen = System.currentTimeMillis();
         try
         {
             if (length == -1)
@@ -74,6 +76,8 @@ public class ApiClientData {
             e.printStackTrace();
         }
         key.cancel();
+        Main.publicInterface.selector.wakeup();
+        queue = null;
         for(Long id : ids)
         {
 
@@ -82,6 +86,7 @@ public class ApiClientData {
     }
 
     void write() {
+        lastTimeSeen = System.currentTimeMillis();
         ByteBuffer [] msg = queue.peek();
         if(msg == null)
         {
@@ -119,5 +124,10 @@ public class ApiClientData {
 
     void setKey(SelectionKey key) {
         this.key = key;
+    }
+
+    public void checkTimeout() {
+        if(queue.isEmpty() && System.currentTimeMillis() - lastTimeSeen > 30000)
+            close();
     }
 }
