@@ -45,7 +45,6 @@ public class PublicInterfaceReader implements Runnable {
         {
             type = msg.getInt();
             id = msg.getLong();
-            System.out.println("type: "+type+"id "+id);
             data.addId(id);
             System.out.println("API RECEIVED "+type+" id "+id);
             handlers[type-1].handle(msg,data,id);

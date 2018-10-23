@@ -114,7 +114,15 @@ public class ClientHandler implements Runnable {
                                 .append("\nFiltered Block: ")
                                 .append(Main.invStat.filtered_block.get())
                                 .append("\nCMPCT Blocks: ")
-                                .append(Main.invStat.cmpct_block.get());
+                                .append(Main.invStat.cmpct_block.get())
+                        		.append("\nwitness Blocks: ")
+								.append(Main.invStat.msg_witness_block.get())
+								.append("\nwitness tx: ")
+								.append(Main.invStat.msg_witness_tx.get())
+								.append("\nwitness filtered block: ")
+								.append(Main.invStat.msg_filtered_witness_block.get())
+								.append("\nEmpty invs: ")
+								.append(Main.invStat.emptyInv.get());
                         break;
                     case "mem":
                         Runtime r = Runtime.getRuntime();
@@ -140,6 +148,12 @@ public class ClientHandler implements Runnable {
                                 .append("m ")
                                 .append(((time % (1000 * 60)) / 1000))
                                 .append("s");
+                        break;
+                    case "msg" :
+                        builder.append("Inventory Received: ")
+                                .append(Main.inventoryNumber.get())
+                                .append("\n Messages Sent Over API")
+                                .append(Main.sentMessage.get());
                         break;
                     case "terminate":
                         Main.terminate.set(true);

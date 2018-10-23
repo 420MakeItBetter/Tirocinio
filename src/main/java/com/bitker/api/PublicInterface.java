@@ -301,6 +301,7 @@ public class PublicInterface implements Runnable {
 							skt = srv.accept();
 							skt.setOption(StandardSocketOptions.SO_REUSEADDR,true);
 							skt.configureBlocking(false);
+							System.out.println("API SOCKET new connection from : "+((InetSocketAddress)skt.getRemoteAddress()).getAddress().getCanonicalHostName());
 							ApiClientData data = new ApiClientData(skt);
 							data.setKey(skt.register(selector,SelectionKey.OP_READ,data));
 						}catch (IOException e)

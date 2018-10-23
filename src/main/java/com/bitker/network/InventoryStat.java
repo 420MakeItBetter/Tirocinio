@@ -12,6 +12,10 @@ public class InventoryStat {
     public AtomicLong block;
     public AtomicLong filtered_block;
     public AtomicLong cmpct_block;
+	public AtomicLong msg_witness_block;
+    public AtomicLong msg_witness_tx;
+    public AtomicLong msg_filtered_witness_block;
+    public AtomicLong emptyInv;
 
     public InventoryStat(){
         error = new AtomicLong();
@@ -19,6 +23,10 @@ public class InventoryStat {
         block = new AtomicLong();
         filtered_block = new AtomicLong();
         cmpct_block = new AtomicLong();
+        msg_witness_block = new AtomicLong();
+        msg_witness_tx = new AtomicLong();
+        msg_filtered_witness_block = new AtomicLong();
+        emptyInv.incrementAndGet();
     }
 
 }

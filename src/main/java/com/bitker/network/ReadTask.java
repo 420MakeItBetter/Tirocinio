@@ -63,6 +63,8 @@ public class ReadTask extends Task{
             EventService.getInstance().publish(new MessageReceivedEvent(p,m));
         }
 
+        if(m instanceof Inventory)
+            Main.inventoryNumber.incrementAndGet();
         /*if(m instanceof Inventory)
             if(r.nextInt(100) > 60)
             {

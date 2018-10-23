@@ -62,6 +62,8 @@ public class Main {
      * Indicates if this client has started the procedure of termination
      */
     public static AtomicBoolean terminate = new AtomicBoolean(false);
+	public static AtomicLong inventoryNumber = new AtomicLong(0);
+    public static AtomicLong sentMessage = new AtomicLong(0);
 
 
     /**

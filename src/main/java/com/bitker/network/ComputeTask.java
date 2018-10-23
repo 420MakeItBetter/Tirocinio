@@ -47,8 +47,8 @@ public class ComputeTask extends Task {
             pingResponse((Ping) m);
         else if(m instanceof Address)
             saveAddressees((Address) m);
-        //else if(m instanceof Inventory)
-        //    inventoryStat((Inventory) m);
+        else if(m instanceof Inventory)
+            inventoryStat((Inventory) m);
         else if(m instanceof GetAddress)
             sendAddress();
 
@@ -65,6 +65,9 @@ public class ComputeTask extends Task {
     }
 
     private void inventoryStat(Inventory m) {
+    	if(m.getInventoryVectors().isEmpty())
+    		Main.invStat.emptyInv.incrementAndGet();
+    	else
         for(InventoryVector v : m.getInventoryVectors())
             try
             {
@@ -85,6 +88,14 @@ public class ComputeTask extends Task {
                     case MSG_FILTERED_BLOCK:
                         Main.invStat.filtered_block.incrementAndGet();
                         break;
+					case MSG_WITNESS_BLOCK:
+						Main.invStat.msg_witness_block.incrementAndGet();
+						break;
+					case MSG_WITNESS_TX:
+						Main.invStat.msg_witness_tx.incrementAndGet();
+						break;
+					case MSG_FILTERED_WITNESS_BLOCK:
+						Main.invStat.msg_filtered_witness_block.incrementAndGet();
                 }
             }catch (Exception e)
             {

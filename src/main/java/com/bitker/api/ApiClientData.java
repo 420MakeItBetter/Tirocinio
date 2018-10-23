@@ -20,35 +20,60 @@ public class ApiClientData {
 
     private int length;
     private ByteBuffer msgLen;
+	private ByteBuffer magic;
     private ByteBuffer msg;
     private SocketChannel skt;
     private ConcurrentLinkedQueue<ByteBuffer []> queue;
     private Set<Long> ids;
     private SelectionKey key;
     private long lastTimeSeen;
+    private boolean magicpassed;
 
     ApiClientData(SocketChannel skt){
         length = -1;
         msgLen = ByteBuffer.allocate(4);
+        magic = ByteBuffer.allocate(4);
         queue = new ConcurrentLinkedQueue<>();
         this.skt = skt;
         ids = new HashSet<>();
+        lastTimeSeen = System.currentTimeMillis();
+        magicpassed = false;
     }
 
     void read(){
         lastTimeSeen = System.currentTimeMillis();
         try
         {
+        	if(!magicpassed)
+			{
+				if(skt.read(magic) == -1)
+					close();
+				if(magic.position() != magic.limit())
+					return;
+				magic.clear();
+				int val = magic.getInt();
+				if(val != 420024)
+				{
+
+					System.out.println("API magic number error");
+					System.out.println(val);
+					close();
+					return;
+				}
+				magicpassed = true;
+				magic.clear();
+			}
             if (length == -1)
             {
+
                 if (skt.read(msgLen) == -1)
                     close();
                 if (!(msgLen.position() == msgLen.limit()))
                     return;
                 msgLen.clear();
                 length = msgLen.getInt();
+                System.out.println("API length "+length);
                 msgLen.clear();
-                System.out.println("APICLIENTDATA: reading message of "+length+"byte");
                 msg = ByteBuffer.allocate(length);
             }
             if (skt.read(msg) == -1)
@@ -57,6 +82,7 @@ public class ApiClientData {
                 return;
             Main.publicInterface.ex.execute(new PublicInterfaceReader(msg, this));
             msg = null;
+            magicpassed = false;
             length = -1;
         }
         catch (IOException e)
@@ -77,6 +103,7 @@ public class ApiClientData {
         }
         key.cancel();
         Main.publicInterface.selector.wakeup();
+        msg = null;
         queue = null;
         for(Long id : ids)
         {
@@ -97,10 +124,10 @@ public class ApiClientData {
         {
             skt.write(msg);
             if(msg[msg.length - 1].position() == msg[msg.length - 1].capacity())
-            {
-                System.out.println("Removed");
-                queue.poll();
-            }
+			{
+				Main.sentMessage.incrementAndGet();
+				queue.poll();
+			}
             if(queue.isEmpty())
                 Main.publicInterface.registerChannel(skt,SelectionKey.OP_READ, this);
         } catch (IOException e)
@@ -127,7 +154,7 @@ public class ApiClientData {
     }
 
     public void checkTimeout() {
-        if(queue.isEmpty() && System.currentTimeMillis() - lastTimeSeen > 30000)
+        if(!queue.isEmpty() && System.currentTimeMillis() - lastTimeSeen > 30000)
             close();
     }
 }
